@@ -1,0 +1,52 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
+class DeTai extends Model
+{
+    use HasFactory;
+
+    protected $table = 'DeTai';
+
+    protected $primaryKey = 'MaDT';
+    public $incrementing = false; 
+    protected $keyType = 'string';
+
+    protected $fillable = [
+        'MaDT',
+        'TenDeTai',
+        'MaGV',
+        'MaGVPB',
+        'MoTa',
+        'TrangThai',
+        'MaHD',
+    ];
+
+    public $timestamps = true;
+
+
+    public function giangVien(): BelongsTo
+    {
+        return $this->belongsTo(GiangVien::class, 'MaGV', 'MaGV');
+    }
+
+    public function giangVienPhanBien(): BelongsTo
+    {
+        return $this->belongsTo(GiangVien::class, 'MaGVPB', 'MaGV');
+    }
+
+    public function SinhVien()
+    {
+        return $this->hasMany(SinhVien::class, 'MaDT', 'MaDT');
+    }
+
+    public function hoiDong()
+    {
+        return $this->belongsTo(HoiDong::class, 'MaHD', 'MaHD');
+    }
+    
+}

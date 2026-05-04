@@ -1,0 +1,7 @@
+*
+!private/
+!public/
+!.gitignore
+# But do not ignore these
+!templates/
+!templates/*
