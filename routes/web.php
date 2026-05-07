@@ -171,3 +171,20 @@ Route::delete('/committees/{id}', [HoiDongController::class, 'destroy']);
 Route::post('/committees/assign', [HoiDongController::class, 'assignToTopic']);
 
 Route::get('/dashboard/stats', [StudentController::class, 'dashboardStats']);
+
+
+// Route cho sinh viên 
+Route::get(
+    '/meeting-schedule',
+
+    function () {
+
+        return Inertia::render(
+            'Students/pages/MeetingSchedule'
+        );
+    }
+
+)->middleware([
+    'auth',
+    'verified'
+]);
