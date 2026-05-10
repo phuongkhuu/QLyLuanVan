@@ -1,118 +1,102 @@
 ﻿<template>
-  <div class="min-h-screen bg-gray-100 flex flex-col">
-    <!-- Header -->
-    <header class="flex justify-between items-center bg-blue-600 text-white px-6 py-4 shadow">
-       <!-- Bên trái: Tiêu đề + Khoa -->
-        <div class="flex flex-col">
-          <h1 class="text-xl font-bold">HỆ THỐNG QUẢN LÝ LUẬN VĂN TỐT NGHIỆP</h1>
-          <h5 class="text-sm font-medium mt-1">KHOA CÔNG NGHỆ THÔNG TIN</h5>
+    <div
+        class="min-h-screen bg-gray-100 flex flex-col"
+    >
+        <!-- Header -->
+        <Header :user="user" />
+
+        <!-- Content -->
+        <div class="flex flex-1">
+
+            <!-- Sidebar -->
+            <Sidebar
+                :currentView="currentView"
+
+                @changeView="setCurrentView"
+            />
+
+            <!-- Main -->
+            <main class="flex-1">
+
+                <!-- Dashboard -->
+                <Maincontent
+                    v-if="
+                        currentView === 'dashboard'
+                    "
+
+                    :topics="topics"
+                />
+
+                <!-- lịch gặp giảng viên hướng dẫn -->
+                <MeetingSchedule
+                    v-if="
+                        currentView === 'meetingSchedule'
+                    "
+                />
+                <!-- Xem điểm 50% -->
+                <Score50
+                    v-if="
+                        currentView === 'score50'
+                    "
+                />
+
+                <ReviewLecturer
+                    v-if="
+                        currentView === 'reviewLecturer'
+                    "
+                />
+              <!-- Lịch gặp giáo viên phản biện -->
+                <ReviewSchedule
+                    v-if="
+                        currentView === 'reviewSchedule'
+                    "
+                />
+              <!-- gặp hội đồng -->
+                <DefenseCommittee
+                    v-if="
+                        currentView === 'defenseCommittee'
+                    "
+                />
+
+            </main>
         </div>
-      <!-- Góc phải: Thông tin admin -->
-      <div class="relative">
-        <div @click="Menu" class="flex items-center space-x-3 cursor-pointer" >
-        <div class="w-10 h-10 bg-white text-blue-600 font-bold rounded-full flex items-center justify-center">A</div>
-        <div class="text-right">
-          <div class="font-semibold text-sm">{{ user.name }}</div>
-          <div class="text-xs opacity-80">Admin</div>
-        </div>
-      </div>
-      <!-- Dropdown menu -->
-      <div v-if="showMenu" 
-      class="absolute right-0 mt-2 bg-white text-black rounded shadow w-40 z-50" >
-       <button @click="Profile" class="w-full text-left px-4 py-2 hover:bg-gray-100">Profile</button>
-       <button @click="Logout" class="w-full text-left px-4 py-2 hover:bg-gray-100">Log out</button>
-      </div>
     </div>
-
-    </header>
-
-    <!-- Nội dung chính: sidebar + main -->
-    <div class="flex flex-1">
-      <!-- Sidebar -->
-      <aside class="w-64 bg-white border-r p-6">
-        <nav class="space-y-4">
-          <button class="block text-left text-blue-600 hover:underline">Bảng phân công </button>
-          <button class="block text-left text-blue-600 hover:underline">Quản lý sinh viên</button>
-          <button class="block text-left text-blue-600 hover:underline">Quản lý đề tài</button>
-          <button class="block text-left text-blue-600 hover:underline">Quản lý giảng viên</button>
-          <button class="block text-left text-blue-600 hover:underline">Trang chủ</button>
-        </nav>
-      </aside>
-
-      <!-- Main content: Be click vào ra index này-->
-      <main class="flex-1 p-8">
-        <h1 class="text-2xl font-bold mb-6 text-center">BẢNG PHÂN CÔNG</h1>
-
-       <!-- Search bar: Be để nó tìm kiếm được -->
-      <input
-        type="text"
-        placeholder="Tìm kiếm theo tên GVHD hoặc tên đề tài..."
-        class="w-full mb-4 p-2 border rounded"
-      />
-
-        <!-- Bảng đăng ký đề tài -->
-        <table class="w-full bg-white rounded shadow">
-          <thead class="bg-gray-100 text-left">
-            <tr>
-              <th class="p-3">Mã đề tài</th>
-              <th class="p-3">Tên đề tài</th>
-              <th class="p-3">Giảng viên</th>
-              <th class="p-3">Số lượng</th>
-              <th class="p-3">Hành động</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="(topic, i) in topics" :key="i" class="border-t">
-              <td class="p-3">{{ topic.code }}</td>
-              <td class="p-3">{{ topic.title }}</td>
-              <td class="p-3">{{ topic.lecturer }}</td>
-              <td class="p-3">{{ topic.limit }}</td>
-            <td class="p-3">
-              <button
-              class="px-3 py-1 rounded font-medium text-white"
-              :class="{
-                'bg-green-600 hover:bg-green-700': topic.status === 'Hoàn thành',
-                'bg-yellow-500 hover:bg-yellow-600': topic.status === 'Chờ duyệt',
-                'bg-blue-600 hover:bg-blue-700': topic.status === 'Đang thực hiện'
-              }"
-              >
-              {{ topic.status }}
-            </button>
-          </td>
-            </tr>
-          </tbody>
-        </table>
-      </main>
-    </div>
-  </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import { router } from '@inertiajs/vue3'
-const showMenu = ref(false)
+import { ref } from "vue"
 
-function Menu() {
-  showMenu.value = !showMenu.value //Hiển thị profile với logout
-}
+import Header from "./components/Header.vue"
 
-function Profile() {
-  router.visit('/profile') //Di chuyển đến trang thông tin cá nhân
-}
+import Sidebar from "./components/Sidebar.vue"
 
-function Logout() {
-  router.post(route('logout')) //Gọi route logout trong web.php
-}
+import Maincontent from "./components/Maincontent.vue"
+
+import MeetingSchedule
+from "./pages/MeetingSchedule.vue"
+import Score50 from "./pages/Score50.vue"
+import ReviewLecturer from "./pages/ReviewLecturer.vue"
+import DefenseCommittee from "./pages/DefenseCommittee.vue"
+import ReviewSchedule from "./pages/ReviewSchedule.vue"
+
 defineProps({
-  user: Object,
-});
+    user: Object,
+})
+
+const currentView =
+    ref("dashboard")
+
+function setCurrentView(view) {
+    currentView.value = view
+}
+
 const topics = [
-  {
-    code: '',
-    title: '',
-    lecturer: '',
-    limit: 0,
-    status: ''
-  },
+    {
+        code: "",
+        title: "",
+        lecturer: "",
+        limit: 0,
+        status: "",
+    },
 ]
 </script>
