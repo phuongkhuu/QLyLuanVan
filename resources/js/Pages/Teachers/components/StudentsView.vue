@@ -96,4 +96,21 @@ const filteredStudents = computed(() => {
     return text.includes(q)
   })
 })
+
+function updateGroup(student) {
+    axios
+        .post("/update-student-group", {
+            mssv: student.mssv,
+            group_number: student.group,
+        })
+        .then((res) => {
+            alert("Cập nhật nhóm thành công!");
+        })
+        .catch((err) => {
+            alert(err.response.data.error || "Cập nhật nhóm thất bại!");
+        });
+    fetchStudents();
+}
+
+
 </script>

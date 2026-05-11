@@ -54,8 +54,10 @@ Route::get('/dashboard', function () {
             ]);
         case 'SinhVien':
         default:
+            $sinhVien = \App\Models\SinhVien::where('email', $user->email)->first();
             return Inertia::render('Students/Index', [
-                'user' => $user
+                'user' => $user,
+                'mssv'   => $sinhVien?->MSSV, 
             ]);
     }
 
@@ -121,6 +123,12 @@ Route::put('/update-topic/{MaDT}', [DeTaiController::class, 'update']);
 
 //Route phân công
 Route::put('/assign-students/{mssv}', [StudentController::class, 'edit']);
+
+//Route lấy gv theo MaGV
+Route::post('/teacher-by-magv/{MaGV}', [TeacherController::class, 'getTeacherByMaGV']);
+
+//Route lấy đề tài theo MSSV
+Route::get('/topic-by-student/{MSSV}', [DeTaiController::class, 'getTopicByStudent']);
 
 //Route lấy dssv theo gv
 Route::post('/teacher-by-id/{user_id}', [TeacherController::class, 'getTeacherById']);

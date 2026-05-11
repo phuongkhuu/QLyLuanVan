@@ -1552,12 +1552,6 @@
                       >
                         Sửa
                       </button>
-                      <button
-                        @click="deleteEvent(item.id)"
-                        class="bg-red-500 text-white px-2 py-1 rounded text-xs hover:bg-red-600 transition"
-                      >
-                        Xóa
-                      </button>
                     </div>
                   </td>
                 </tr>
