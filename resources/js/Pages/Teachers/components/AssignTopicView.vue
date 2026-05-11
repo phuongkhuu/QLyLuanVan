@@ -30,57 +30,42 @@
                 </thead>
 
                 <tbody>
+  <tr v-for="(row, idx) in assignments" :key="idx">
+    <td class="p-3 text-center">{{ row.MSSV }}</td>
+    <td class="p-3 text-center">{{ row.name }}</td>
 
-                    <tr
-                        v-for="(row, idx) in assignments"
-                        :key="idx"
-                    >
-                        <td class="p-3 text-center">
-                            {{ row.MSSV }}
-                        </td>
+    <!-- Show topic info ONLY on the first row of each group, and span down -->
+    <td v-if="row.isFirst" :rowspan="row.rowSpan" class="p-3 text-center">
+      {{ row.group }}
+    </td>
+    <td v-if="row.isFirst" :rowspan="row.rowSpan" class="p-3 text-center">
+      {{ row.topic?.TenDeTai }}
+    </td>
+    <td v-if="row.isFirst" :rowspan="row.rowSpan" class="p-3 text-center">
+      {{ row.topic?.MoTa }}
+    </td>
+    <td v-if="row.isFirst" :rowspan="row.rowSpan" class="p-3 text-center">
+      {{ row.topic?.TrangThai }}
+    </td>
 
-                        <td class="p-3 text-center">
-                            {{ row.name }}
-                        </td>
-
-                        <td class="p-3 text-center">
-                            {{ row.group }}
-                        </td>
-
-                        <td class="p-3 text-center">
-                            {{ row.topic?.TenDeTai }}
-                        </td>
-
-                        <td class="p-3 text-center">
-                            {{ row.topic?.MoTa }}
-                        </td>
-
-                        <td class="p-3 text-center">
-                            {{ row.topic?.TrangThai }}
-                        </td>
-
-                        <td class="p-3 text-center">
-                            <div class="flex gap-2 justify-center">
-
-                                <button
-                                    @click="$emit('openAssign', row)"
-                                    class="bg-blue-500 text-white px-3 py-1 rounded text-sm"
-                                >
-                                    Phân công
-                                </button>
-
-                                <button
-                                    @click="$emit('downloadTemplate', row.topic?.MaDT)"
-                                    class="bg-indigo-500 text-white px-3 py-1 rounded text-sm"
-                                >
-                                    Xuất nhiệm vụ
-                                </button>
-
-                            </div>
-                        </td>
-                    </tr>
-
-                </tbody>
+    <td v-if="row.isFirst" :rowspan="row.rowSpan" class="p-3 text-center">
+      <div class="flex gap-2 justify-center">
+        <button
+          @click="$emit('openAssign', row)"
+          class="bg-blue-500 text-white px-3 py-1 rounded text-sm"
+        >
+          Phân công
+        </button>
+        <button
+          @click="$emit('downloadTemplate', row.topic?.MaDT)"
+          class="bg-indigo-500 text-white px-3 py-1 rounded text-sm"
+        >
+          Xuất nhiệm vụ
+        </button>
+      </div>
+    </td>
+  </tr>
+</tbody>
             </table>
         </div>
     </div>

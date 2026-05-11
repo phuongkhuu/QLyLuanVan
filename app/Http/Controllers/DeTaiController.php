@@ -65,7 +65,7 @@ class DeTaiController extends Controller
     {
         $validated = $request->validate([
             'MaDT'    => 'required|string|unique:DeTai,MaDT',
-            'TenDeTai'    => 'required|string|max:255',
+            'TenDeTai'  => 'required|string|max:255',
             'MaGV'     => 'nullable|string|exists:GiangVien,MaGV',
         ]);
         return DeTai::create($validated);

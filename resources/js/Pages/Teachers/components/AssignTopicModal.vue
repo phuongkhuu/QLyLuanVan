@@ -107,17 +107,34 @@ const props = defineProps({
     formData: Object,
 })
 
-const emit = defineEmits([
-    "save",
-    "close",
-])
+const emit = defineEmits(["save", "close"])
 
 const localForm = reactive({
-    ...props.formData,
+    TenDT: "",
+    MoTa: "",
+    TrangThai: "",
 })
 
-const selectedStatus = ref(localForm.TrangThai || "")
+const selectedStatus = ref("")
 
+// 1. Reset the form whenever the modal is opened
+watch(
+    () => props.show,
+    (newVal) => {
+        if (newVal) {
+            // Copy all fields from the latest formData
+            Object.assign(localForm, {
+                TenDT: "",
+                MoTa: "",
+                TrangThai: "",
+                ...props.formData,   // override with parent's data
+            })
+            selectedStatus.value = localForm.TrangThai || ""
+        }
+    }
+)
+
+// 2. Keep selectedStatus in sync with localForm.TrangThai
 watch(selectedStatus, (val) => {
     if (val !== "Ý kiến khác") {
         localForm.TrangThai = val
@@ -125,6 +142,7 @@ watch(selectedStatus, (val) => {
 })
 
 function handleSave() {
+    // Emit the updated local form (parent will use TenDT, MoTa, TrangThai)
     emit("save", localForm)
 }
 </script>
