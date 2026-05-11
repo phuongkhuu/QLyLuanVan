@@ -33,6 +33,12 @@ class TeacherController extends Controller
         return $teacher;
     }
 
+    public function getTeacherByMaGV(Request $request, $maGV)
+    {
+        $teacher = GiangVien::where('MaGV', $maGV)->firstOrFail();
+        return $teacher;
+    }
+
     private function generateUniqueMaGV()
     {
         do {
