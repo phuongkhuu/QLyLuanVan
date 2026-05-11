@@ -56,6 +56,15 @@ class DeTaiController extends Controller
         });
     }
 
+    public function getTopicByStudent($MSSV)
+    {
+        $student = SinhVien::where('MSSV', $MSSV)->firstOrFail();
+        if (!$student->MaDT) {
+            return null;
+        }
+        return DeTai::where('MaDT', $student->MaDT)->with('giangVien')->first();
+    }
+
     public function show(DeTai $detai)
     {
         return $detai->load('giangVien');
@@ -150,7 +159,6 @@ public function saveTopic(Request $request)
         'data' => $existingTopic
     ]);
 }
-
 
     public function assignReviewer(Request $request, $MaDT)
     {

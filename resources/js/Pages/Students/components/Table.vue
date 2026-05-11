@@ -148,33 +148,18 @@
                             class="px-6 py-5 text-center"
                         >
                             <!-- Done -->
-                            <div
-                                v-if="
-                                    topic.status ===
-                                    'Hoàn thành'
-                                "
-                                class="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-emerald-100 text-emerald-700 font-semibold text-sm"
+                            <div v-if="topic.status === 'Được tiếp tục'" class="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-emerald-100 text-emerald-700 font-semibold text-sm"
                             >
-                                ✅ Hoàn thành
+                                {{ topic.status }}
                             </div>
-
-                            <!-- Waiting -->
-                            <div
-                                v-else-if="
-                                    topic.status ===
-                                    'Chờ duyệt'
-                                "
-                                class="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-yellow-100 text-yellow-700 font-semibold text-sm"
-                            >
-                                ⏳ Chờ duyệt
+                            <div v-else-if="topic.status === 'Cảnh cáo'" class="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-yellow-100 text-yellow-700 font-semibold text-sm">
+                                {{ topic.status }}
                             </div>
-
-                            <!-- Processing -->
-                            <div
-                                v-else
-                                class="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-blue-100 text-blue-700 font-semibold text-sm"
-                            >
-                                🚀 Đang thực hiện
+                            <div v-else-if="topic.status === 'Bị đình chỉ'" class="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-red-100 text-red-700 font-semibold text-sm">
+                                {{ topic.status }}
+                            </div>
+                            <div v-else-if="topic.status === 'Ý kiến khác'" class="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-slate-100 text-slate-700 font-semibold text-sm">
+                                {{ topic.status }}
                             </div>
                         </td>
                     </tr>
