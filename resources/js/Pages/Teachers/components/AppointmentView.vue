@@ -277,6 +277,7 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { router } from '@inertiajs/vue3';
+import axios from 'axios';
 
 // ==========================================
 // 1. NHẬN DỮ LIỆU TỪ LARAVEL CONTROLLER GỬI SANG
@@ -301,9 +302,9 @@ const activeTab = ref('guide');
 // Chuyển đổi dữ liệu sinh viên cho thẻ Select
 const studentList = computed(() => {
     return props.sinhVienData.map(sv => ({
-        id: sv.MSSV,
-        name: sv.Ho_va_Ten,
-        topic: sv.detai ? sv.detai.TenDeTai : (sv.HuongDeTai || ''),
+        id: sv.mssv,
+        name: sv.name,
+        topic: sv.topic,
         MaDT: sv.MaDT
     }));
 });
@@ -393,37 +394,40 @@ const autoFillTopic = () => {
     }
 };
 
-const saveSchedule = () => {
+const saveSchedule = async () => {
     if (!formSchedule.value.studentId || !formSchedule.value.date || !formSchedule.value.time) {
         alert('Vui lòng điền đủ thông tin sinh viên, ngày và giờ!');
         return;
     }
 
-    // Ghép ngày và giờ thành định dạng YYYY-MM-DD HH:MM:00 cho MySQL
     const datetime = `${formSchedule.value.date} ${formSchedule.value.time}:00`;
 
     const payload = {
         MSSV: formSchedule.value.studentId,
-        MaDT: formSchedule.value.MaDT,
+        MaDT: formSchedule.value.MaDT || null,
         ThoiGianGap: datetime,
         DiaDiem: formSchedule.value.location,
         TrangThai: 'Chờ xác nhận',
         LoaiLich: formSchedule.value.isGuide ? 1 : 2,
-        GhiChu: formSchedule.value.note
+        GhiChu: formSchedule.value.note || null
     };
 
-    // Dùng router của Inertia để gửi request POST lên Laravel
-    router.post(route('lichhen.store'), payload, {
-        preserveScroll: true,
-        onSuccess: () => {
-            alert('Tạo lịch gặp mới thành công!');
-            closeCreateModal();
-        },
-        onError: (errors) => {
-            console.error("Lỗi xác thực:", errors);
+    try {
+        await axios.post(route('lichhen.store'), payload);
+        alert('Tạo lịch gặp mới thành công!');
+        closeCreateModal();
+        // Sau khi tạo, bạn có thể muốn refresh danh sách lịch hẹn
+        // fetchLichHen(); // hoặc emit một event
+    } catch (error) {
+        console.error('Lỗi khi tạo lịch:', error);
+        // Hiển thị lỗi chi tiết nếu có
+        if (error.response?.data?.errors) {
+            const messages = Object.values(error.response.data.errors).flat().join('\n');
+            alert('Lỗi: ' + messages);
+        } else {
             alert('Có lỗi xảy ra khi lưu vào Database!');
         }
-    });
+    }
 };
 
 // ==========================================

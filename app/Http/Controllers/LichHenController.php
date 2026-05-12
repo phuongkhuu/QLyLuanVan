@@ -3,58 +3,76 @@
 namespace App\Http\Controllers;
 
 use App\Models\LichHenSV;
-use App\Models\SinhVien;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
+use Illuminate\Http\JsonResponse;
 
 class LichHenController extends Controller
 {
-    // Xem danh sách
-    public function index()
+    public function index(): JsonResponse
     {
-        // $maGvHienTai = auth()->user()->giangvien->MaGV; 
-        
-        $danhSachLichHen = LichHenSV::with(['sinhvien', 'detai'])
-            // ->where('MaGV', $maGvHienTai)
+        $lichHen = LichHenSV::with(['sinhvien', 'detai'])
+            // ->where('MaGV', $maGV)
             ->orderBy('ThoiGianGap', 'desc')
-            ->get();
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'id'          => $item->id,
+                    'MSSV'        => $item->MSSV,
+                    'studentName' => $item->sinhvien?->Ho_va_Ten ?? '',
+                    'topic'       => $item->detai?->TenDeTai ?? '',
+                    'MaDT'        => $item->MaDT,
+                    'ThoiGianGap' => $item->ThoiGianGap,
+                    'DiaDiem'     => $item->DiaDiem,
+                    'TrangThai'   => $item->TrangThai,
+                    'LoaiLich'    => $item->LoaiLich,
+                    'GhiChu'      => $item->GhiChu,
+                ];
+            });
 
-        $danhSachSinhVien = SinhVien::with('detai')->get();
-
-        return Inertia::render('Teachers/components/AppointmentView', [
-            'lichHenData' => $danhSachLichHen,
-            'sinhVienData' => $danhSachSinhVien
-        ]);
+        return response()->json($lichHen);
     }
 
-    // Thêm lịch mới
-    public function store(Request $request)
+    /**
+     * Tạo lịch hẹn mới.
+     */
+    public function store(Request $request): JsonResponse
     {
-        $request->validate([
-            'MSSV' => 'required',
+        $validated = $request->validate([
+            'MSSV'        => 'required|string|exists:SinhVien,MSSV',
+            'MaDT'        => 'nullable|string|exists:DeTai,MaDT',
             'ThoiGianGap' => 'required|date',
-            'DiaDiem' => 'required',
-            'LoaiLich' => 'required|integer'
+            'DiaDiem'     => 'required|string',
+            'LoaiLich'    => 'required|integer|in:1,2',   // 1 = Hướng dẫn, 2 = Phản biện
+            'TrangThai'   => 'sometimes|string',
+            'GhiChu'      => 'nullable|string',
         ]);
 
-        LichHenSV::create([
-            'MSSV' => $request->MSSV,
-            'MaDT' => $request->MaDT,
-            'MaGV' => 'GV01', // Thay bằng mã GV thực tế từ auth()->user()
-            'ThoiGianGap' => $request->ThoiGianGap,
-            'DiaDiem' => $request->DiaDiem,
-            'TrangThai' => $request->TrangThai,
-            'LoaiLich' => $request->LoaiLich,
-            'GhiChu' => $request->GhiChu
+        // Dùng mã giảng viên đăng nhập
+        // $maGV = auth()->user()->giangvien->MaGV;
+
+        $lich = LichHenSV::create([
+            'MSSV'        => $validated['MSSV'],
+            'MaDT'        => $validated['MaDT'] ?? null,
+            'MaGV'        => 'GV01',          // thay bằng $maGV
+            'ThoiGianGap' => $validated['ThoiGianGap'],
+            'DiaDiem'     => $validated['DiaDiem'],
+            'TrangThai'   => $validated['TrangThai'] ?? 'Chờ xác nhận',
+            'LoaiLich'    => $validated['LoaiLich'],
+            'GhiChu'      => $validated['GhiChu'] ?? null,
         ]);
 
-        return redirect()->back()->with('success', 'Tạo lịch thành công');
+        // Trả về đối tượng vừa tạo kèm quan hệ
+        return response()->json($lich->load(['sinhvien', 'detai']), 201);
     }
 
-    // Xóa lịch
-    public function destroy($id)
+    /**
+     * Xoá lịch hẹn.
+     */
+    public function destroy($id): JsonResponse
     {
-        LichHenSV::findOrFail($id)->delete();
-        return redirect()->back()->with('success', 'Xóa thành công');
+        $lich = LichHenSV::findOrFail($id);
+        $lich->delete();
+
+        return response()->json(['message' => 'Xoá lịch thành công']);
     }
 }
