@@ -63,7 +63,10 @@
                     @leaveTopic="clearHoveredTopic"
                     :isTopicHovered="isTopicHovered"
                 />
-
+                <!-- Lịch gặp sinh viên -->
+                <AppointmentView
+                    v-if="currentView === 'AppointmentView'"
+                />
                 <!-- Mini Form ĐIỂM PHẢN BIỆN -->
                 <div
                     v-if="showReviewScoreMiniForm"
@@ -770,6 +773,8 @@ import AssignTopicView from "./components/AssignTopicView.vue";
 import AssignTopicModal from "./components/AssignTopicModal.vue";
 import Evaluation50View from "./components/Evaluation50View.vue";
 import ReviewScoreView from "./components/ReviewScoreView.vue";
+// cập nhật GUI
+import AppointmentView from "./components/AppointmentView.vue";
 
 const props = defineProps({
     user: { type: Object, default: () => ({ name: "Giảng viên" }) },
@@ -1543,7 +1548,7 @@ const filteredGuideScoreList = computed(() => {
 });
 
 const canGrade50 = ref(false);
-
+2
 async function fetchGrade50Access() {
     try {
         const res = await axios.get(
