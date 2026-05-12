@@ -89,7 +89,7 @@
                                 <button @click="openDetailModal(item)" class="border border-gray-300 rounded bg-white p-1.5 text-gray-600 hover:text-indigo-600 hover:border-indigo-400 hover:bg-indigo-50 transition-colors shadow-sm" title="Xem chi tiết">
                                     <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                                 </button>
-                                <button class="border border-gray-300 rounded bg-white p-1.5 text-gray-600 hover:text-red-600 hover:border-red-400 hover:bg-red-50 transition-colors shadow-sm" title="Xóa">
+                                <button @click="deleteSchedule(item.id)" class="border border-gray-300 rounded bg-white p-1.5 text-gray-600 hover:text-red-600 hover:border-red-400 hover:bg-red-50 transition-colors shadow-sm" title="Xóa">
                                     <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                                 </button>
                             </div>
@@ -102,6 +102,7 @@
             </table>
         </div>
 
+        <!-- Modal Tạo Lịch Mới -->
         <div v-if="isCreateModalOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
             <div class="bg-white rounded-xl shadow-2xl w-[600px] overflow-hidden flex flex-col">
                 <div class="flex justify-between items-center px-6 py-4 border-b border-gray-200">
@@ -191,6 +192,7 @@
             </div>
         </div>
 
+        <!-- Modal Chi tiết -->
         <div v-if="isDetailModalOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
             <div class="bg-white rounded-xl shadow-2xl w-[600px] overflow-hidden flex flex-col">
                 <div class="flex justify-between items-center px-6 py-4 border-b border-gray-200">
@@ -272,38 +274,67 @@
 
     </div>
 </template>
-
 <script setup>
 import { ref, computed } from 'vue';
+import { router } from '@inertiajs/vue3';
 
 // ==========================================
-// 1. STATE CHUNG & DỮ LIỆU
+// 1. NHẬN DỮ LIỆU TỪ LARAVEL CONTROLLER GỬI SANG
 // ==========================================
+const props = defineProps({
+    lichHenData: {
+        type: Array,
+        default: () => []
+    },
+    sinhVienData: {
+        type: Array,
+        default: () => []
+    }
+});
+
 const searchQuery = ref('');
 const activeTab = ref('guide'); 
 
-const studentList = ref([
-    { id: 'DH52101979', name: 'Phạm Thị Ánh Hồng', topic: 'Hệ thống web quản lý sân và dịch vụ cầu lông' },
-    { id: 'DH52007161', name: 'Phạm Duy Thắng', topic: 'Xây dựng website bán giày' },
-    { id: 'DH52005912', name: 'Huỳnh Tấn Thiên Khôi', topic: 'Xây dựng website bán điện thoại' },
-    { id: 'DH52110924', name: 'Trần Nguyễn Minh Hiếu', topic: 'Xây dựng hệ thống đặt lịch khám bệnh trực tuyến' },
-    { id: 'DH52110793', name: 'Trịnh Phát Đạt', topic: 'Xây dựng website bán áo thun' },
-    { id: 'DH52109999', name: 'Lê Văn Hoàng', topic: 'Nghiên cứu ứng dụng AI trong nhận diện khuôn mặt' }
-]);
+// ==========================================
+// 2. XỬ LÝ DỮ LIỆU (FORMAT TỪ DATABASE RA GIAO DIỆN)
+// ==========================================
+// Chuyển đổi dữ liệu sinh viên cho thẻ Select
+const studentList = computed(() => {
+    return props.sinhVienData.map(sv => ({
+        id: sv.MSSV,
+        name: sv.Ho_va_Ten,
+        topic: sv.detai ? sv.detai.TenDeTai : (sv.HuongDeTai || ''),
+        MaDT: sv.MaDT
+    }));
+});
 
-const guideSchedules = ref([
-  { id: 1, studentId: 'DH52101979', studentName: 'Phạm Thị Ánh Hồng', topic: 'Hệ thống web quản lý sân và dịch vụ cầu lông', time: { hour: '14:00', date: '20/12/2023' }, location: ['Văn phòng', 'Khoa'], status: 'confirmed' },
-  { id: 2, studentId: 'DH52007161', studentName: 'Phạm Duy Thắng', topic: 'Xây dựng website bán giày', time: { hour: '10:00', date: '21/12/2023' }, location: ['Online', '(Zoom)'], status: 'pending' },
-  { id: 3, studentId: 'DH52005912', studentName: 'Huỳnh Tấn Thiên Khôi', topic: 'Xây dựng website bán điện thoại', time: null, location: null, status: 'none' },
-  { id: 4, studentId: 'DH52110924', studentName: 'Trần Nguyễn Minh Hiếu', topic: 'Xây dựng hệ thống đặt lịch khám bệnh trực tuyến', time: { hour: '16:00', date: '22/12/2023' }, location: ['Thư viện'], status: 'confirmed' },
-  { id: 5, studentId: 'DH52110793', studentName: 'Trịnh Phát Đạt', topic: 'Xây dựng website bán áo thun', time: { hour: '09:00', date: '23/12/2023' }, location: ['Văn phòng', 'Khoa'], status: 'confirmed' }
-]);
+// Format dữ liệu lịch hẹn từ DB sang cấu trúc HTML đang dùng
+const allFormattedSchedules = computed(() => {
+    return props.lichHenData.map(dbItem => {
+        const dateObj = new Date(dbItem.ThoiGianGap);
+        // Fix bù múi giờ nếu cần, hoặc dùng trực tiếp
+        const hourStr = dateObj.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', hour12: false });
+        const dateStr = dateObj.toLocaleDateString('vi-VN'); // DD/MM/YYYY
 
-const reviewSchedules = ref([
-  { id: 101, studentId: 'DH52109999', studentName: 'Lê Văn Hoàng', topic: 'Nghiên cứu ứng dụng AI trong nhận diện khuôn mặt', time: { hour: '08:30', date: '25/12/2023' }, location: ['Phòng Hội đồng 1'], status: 'confirmed' },
-  { id: 102, studentId: 'DH52108888', studentName: 'Nguyễn Thị Mai', topic: 'Xây dựng hệ thống quản lý thư viện thông minh', time: { hour: '13:30', date: '25/12/2023' }, location: ['Phòng Hội đồng 2'], status: 'pending' },
-]);
+        return {
+            id: dbItem.id,
+            studentId: dbItem.MSSV,
+            studentName: dbItem.sinhvien ? dbItem.sinhvien.Ho_va_Ten : 'N/A',
+            topic: dbItem.detai ? dbItem.detai.TenDeTai : 'Chưa có đề tài',
+            time: { hour: hourStr, date: dateStr },
+            location: dbItem.DiaDiem ? dbItem.DiaDiem.split(', ') : [],
+            status: dbItem.TrangThai === 'Đã xác nhận' ? 'confirmed' : 'pending',
+            note: dbItem.GhiChu,
+            LoaiLich: dbItem.LoaiLich
+        };
+    });
+});
 
+// Lọc theo Tab (Hướng dẫn = 1, Phản biện = 2)
+const guideSchedules = computed(() => allFormattedSchedules.value.filter(item => item.LoaiLich === 1));
+const reviewSchedules = computed(() => allFormattedSchedules.value.filter(item => item.LoaiLich === 2));
+
+// Tìm kiếm
 const filteredSchedules = computed(() => {
     const currentData = activeTab.value === 'guide' ? guideSchedules.value : reviewSchedules.value;
     const q = searchQuery.value.trim().toLowerCase();
@@ -316,12 +347,13 @@ const filteredSchedules = computed(() => {
 });
 
 // ==========================================
-// 2. LOGIC MODAL TẠO LỊCH MỚI
+// 3. LOGIC MODAL TẠO LỊCH MỚI (LƯU VÀO DATABASE)
 // ==========================================
 const isCreateModalOpen = ref(false);
 const formSchedule = ref({
     studentId: '',
     topic: '',
+    MaDT: null,
     isGuide: true,
     isReview: false,
     date: '',
@@ -348,7 +380,7 @@ const closeCreateModal = () => {
 
 const resetForm = () => {
     formSchedule.value = {
-        studentId: '', topic: '', isGuide: true, isReview: false,
+        studentId: '', topic: '', MaDT: null, isGuide: true, isReview: false,
         date: '', time: '', location: 'Văn phòng Khoa', note: ''
     };
 };
@@ -357,6 +389,7 @@ const autoFillTopic = () => {
     const selected = studentList.value.find(s => s.id === formSchedule.value.studentId);
     if (selected) {
         formSchedule.value.topic = selected.topic;
+        formSchedule.value.MaDT = selected.MaDT;
     }
 };
 
@@ -366,35 +399,47 @@ const saveSchedule = () => {
         return;
     }
 
-    const newSchedule = {
-        id: Date.now(),
-        studentId: formSchedule.value.studentId,
-        studentName: studentList.value.find(s => s.id === formSchedule.value.studentId)?.name || '',
-        topic: formSchedule.value.topic,
-        time: { 
-            hour: formSchedule.value.time, 
-            date: formSchedule.value.date.split('-').reverse().join('/') 
-        },
-        location: [formSchedule.value.location],
-        status: 'pending',
-        note: formSchedule.value.note
+    // Ghép ngày và giờ thành định dạng YYYY-MM-DD HH:MM:00 cho MySQL
+    const datetime = `${formSchedule.value.date} ${formSchedule.value.time}:00`;
+
+    const payload = {
+        MSSV: formSchedule.value.studentId,
+        MaDT: formSchedule.value.MaDT,
+        ThoiGianGap: datetime,
+        DiaDiem: formSchedule.value.location,
+        TrangThai: 'Chờ xác nhận',
+        LoaiLich: formSchedule.value.isGuide ? 1 : 2,
+        GhiChu: formSchedule.value.note
     };
 
-    if (formSchedule.value.isGuide) {
-        const existingIdx = guideSchedules.value.findIndex(s => s.studentId === formSchedule.value.studentId && s.status === 'none');
-        if (existingIdx !== -1) {
-            guideSchedules.value[existingIdx] = { ...guideSchedules.value[existingIdx], ...newSchedule, id: guideSchedules.value[existingIdx].id };
-        } else {
-            guideSchedules.value.push(newSchedule);
+    // Dùng router của Inertia để gửi request POST lên Laravel
+    router.post(route('lichhen.store'), payload, {
+        preserveScroll: true,
+        onSuccess: () => {
+            alert('Tạo lịch gặp mới thành công!');
+            closeCreateModal();
+        },
+        onError: (errors) => {
+            console.error("Lỗi xác thực:", errors);
+            alert('Có lỗi xảy ra khi lưu vào Database!');
         }
-    }
-    
-    closeCreateModal();
-    alert('Tạo lịch gặp mới thành công!');
+    });
 };
 
 // ==========================================
-// 3. LOGIC MODAL CHI TIẾT LỊCH GẶP
+// 4. LOGIC XÓA LỊCH
+// ==========================================
+const deleteSchedule = (id) => {
+    if(!confirm('Bạn có chắc muốn xóa lịch gặp này?')) return;
+    
+    router.delete(route('lichhen.destroy', id), {
+        preserveScroll: true,
+        onSuccess: () => alert('Đã xóa thành công!')
+    });
+};
+
+// ==========================================
+// 5. LOGIC MODAL CHI TIẾT
 // ==========================================
 const isDetailModalOpen = ref(false);
 const selectedMeeting = ref(null);
@@ -402,15 +447,13 @@ const selectedMeeting = ref(null);
 const openDetailModal = (meetingItem) => {
     selectedMeeting.value = { ...meetingItem };
     if (!selectedMeeting.value.note) {
-        selectedMeeting.value.note = "Yêu cầu chuẩn bị báo cáo tiến độ và demo ứng dụng. Có mặt đúng giờ.";
+        selectedMeeting.value.note = "Không có ghi chú thêm.";
     }
     isDetailModalOpen.value = true;
 };
 
 const closeDetailModal = () => {
     isDetailModalOpen.value = false;
-    setTimeout(() => {
-        selectedMeeting.value = null; 
-    }, 200);
+    setTimeout(() => { selectedMeeting.value = null; }, 200);
 };
 </script>

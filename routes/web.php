@@ -14,6 +14,7 @@ use App\Http\Controllers\ThoiGianController;
 use App\Http\Controllers\DiemHuongDanController;
 use App\Http\Controllers\DiemPhanBienController;
 use App\Http\Controllers\HoiDongController;
+use App\Http\Controllers\LichHenController;
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [
@@ -188,3 +189,10 @@ Route::get(
     'auth',
     'verified'
 ]);
+
+// === ROUTE QUẢN LÝ LỊCH HẸN ===
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/lich-hen', [LichHenController::class, 'index'])->name('lichhen.index');
+    Route::post('/lich-hen', [LichHenController::class, 'store'])->name('lichhen.store');
+    Route::delete('/lich-hen/{id}', [LichHenController::class, 'destroy'])->name('lichhen.destroy');
+});
