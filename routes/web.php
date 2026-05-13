@@ -191,8 +191,6 @@ Route::get(
 ]);
 
 // === ROUTE QUẢN LÝ LỊCH HẸN ===
-Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/lich-hen', [LichHenController::class, 'index'])->name('lichhen.index');
-    Route::post('/lich-hen', [LichHenController::class, 'store'])->name('lichhen.store');
-    Route::delete('/lich-hen/{id}', [LichHenController::class, 'destroy'])->name('lichhen.destroy');
-});
+Route::get('/lich-hen', [LichHenController::class, 'index'])->name('lichhen.index');
+Route::post('/lich-hen', [LichHenController::class, 'store'])->name('lichhen.store');
+Route::delete('/lich-hen/{id}', [LichHenController::class, 'destroy'])->name('lichhen.destroy');

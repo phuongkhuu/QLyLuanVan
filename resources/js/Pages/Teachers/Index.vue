@@ -66,6 +66,8 @@
                 <!-- Lịch gặp sinh viên -->
                 <AppointmentView
                     v-if="currentView === 'AppointmentView'"
+                    :lichHenData="lichHenData"
+                    :sinhVienData="students"
                 />
                 <!-- Mini Form ĐIỂM PHẢN BIỆN -->
                 <div
@@ -789,6 +791,7 @@ const students1 = ref([]);
 const studentsReviewer = ref([]);
 const topics = ref([]);
 const topicsReview = ref([]);
+const lichHenData = ref([]);
 
 // Hover theo đề tài cho bảng điểm phản biện
 const hoveredTopicKey = ref(null);
@@ -864,7 +867,6 @@ const fetchStudents = async () => {
         students.value = Array.from(mergedMap.values()).sort(
             (a, b) => Number(a.group ?? 0) - Number(b.group ?? 0),
         );
-
         studentsReviewer.value = reviewerStudents;
     } catch (err) {
         console.error("fetchStudents error:", err);
@@ -885,9 +887,19 @@ async function fetchTopics() {
     }
 }
 
+async function fetchLichHen() {
+    try {
+        const res = await axios.get("/lich-hen");
+        lichHenData.value = res.data || [];
+    } catch (e) {
+        console.error(e);
+    }
+}
+
 onMounted(() => {
     fetchStudents();
     fetchTopics();
+    fetchLichHen();
     fetchGrade50Access();
     fetchGuideAccess();
     fetchReviewAccess();
