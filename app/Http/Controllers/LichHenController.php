@@ -11,7 +11,7 @@ class LichHenController extends Controller
     public function index(): JsonResponse
     {
         $lichHen = LichHenSV::with(['sinhvien', 'detai'])
-            // ->where('MaGV', $maGV)
+            ->where('MaGV', $maGV)
             ->orderBy('ThoiGianGap', 'desc')
             ->get()
             ->map(function ($item) {
@@ -53,7 +53,7 @@ class LichHenController extends Controller
         $lich = LichHenSV::create([
             'MSSV'        => $validated['MSSV'],
             'MaDT'        => $validated['MaDT'] ?? null,
-            'MaGV'        => 'GV01',          // thay bằng $maGV
+            'MaGV'        => auth()->user()->giangvien->MaGV,          // thay bằng $maGV
             'ThoiGianGap' => $validated['ThoiGianGap'],
             'DiaDiem'     => $validated['DiaDiem'],
             'TrangThai'   => $validated['TrangThai'] ?? 'Chờ xác nhận',

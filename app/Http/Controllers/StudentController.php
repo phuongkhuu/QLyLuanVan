@@ -185,6 +185,30 @@ class StudentController extends Controller
         return response()->json(['success' => true]);
     }
 
+    public function updateStudentTopic(Request $request)
+    {
+        $data = $request->validate([
+            'mssv' => 'required|string|exists:SinhVien,MSSV',
+            'MaDT' => 'required|string|exists:DeTai,MaDT',
+        ]);
+
+        $mssv = $request->mssv;
+        $MaDT = $request->MaDT;
+
+        $student = SinhVien::where('MSSV', $mssv)->first();
+
+        if (!$student) {
+            return response()->json(['error' => 'Sinh viên không tồn tại'], 404);
+        }
+
+        $student->MaDT = $MaDT;
+        $student->save();
+
+        return response()->json(['success' => true]);
+    }
+
+
+
     public function destroy(Request $request)
     {
         $student = SinhVien::where('MSSV', $request->mssv)->firstOrFail();
@@ -230,5 +254,21 @@ class StudentController extends Controller
                 'xin_hoan' => $detaiStats['Xin hoãn'] ?? 0,
             ]
         ]);
+    }
+        
+    public function layDataSinhVienTheoMSSV(Request $request, $MSSV)
+    {
+        $student = SinhVien::where('MSSV', $MSSV)->firstOrFail();
+        $student->load(['giangVienHuongDan', 'deTai']);
+        return [
+            'mssv'     => $student->MSSV,
+            'ten'     => $student->Ho_va_Ten,
+            'Lop'      => $student->Lop,
+            'nhom'    => $student->Nhom,
+            'tenDeTai'    => $student->deTai ? $student->deTai->TenDeTai : '',
+            'GVHD' => $student->giangVienHuongDan ? $student->giangVienHuongDan->Ho_va_Ten : '',
+            'email'    => $student->email,
+            'sdt'    => $student->sdt,
+        ];
     }
 }

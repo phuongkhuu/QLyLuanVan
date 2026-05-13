@@ -91,6 +91,12 @@ const menuItems = [
         title: "Hội đồng bảo vệ",
         description: "Thông báo & lịch bảo vệ",
     },
+    {
+        view: "test",
+        icon: "🧪",
+        title: "Test View",
+        description: "Dùng để test giao diện",
+    }
 ];
 
 function toggleSidebar() {
