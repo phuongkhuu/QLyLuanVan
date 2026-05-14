@@ -66,6 +66,17 @@
             >
                 Điểm hướng dẫn
             </button>
+
+            <button
+                @click="setCurrentView('AppointmentView')"
+                :class="
+                    currentView === 'AppointmentView'
+                        ? 'bg-indigo-100 text-indigo-900 rounded px-3 py-2'
+                        : 'text-left hover:text-indigo-900'
+                "
+            >
+                Lịch gặp sinh viên
+            </button>
         </nav>
     </aside>
 </template>

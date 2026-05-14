@@ -63,7 +63,12 @@
                     @leaveTopic="clearHoveredTopic"
                     :isTopicHovered="isTopicHovered"
                 />
-
+                <!-- Lịch gặp sinh viên -->
+                <AppointmentView
+                    v-if="currentView === 'AppointmentView'"
+                    :lichHenData="lichHenData"
+                    :sinhVienData="students"
+                />
                 <!-- Mini Form ĐIỂM PHẢN BIỆN -->
                 <div
                     v-if="showReviewScoreMiniForm"
@@ -770,6 +775,8 @@ import AssignTopicView from "./components/AssignTopicView.vue";
 import AssignTopicModal from "./components/AssignTopicModal.vue";
 import Evaluation50View from "./components/Evaluation50View.vue";
 import ReviewScoreView from "./components/ReviewScoreView.vue";
+// cập nhật GUI
+import AppointmentView from "./components/AppointmentView.vue";
 
 const props = defineProps({
     user: { type: Object, default: () => ({ name: "Giảng viên" }) },
@@ -784,6 +791,7 @@ const students1 = ref([]);
 const studentsReviewer = ref([]);
 const topics = ref([]);
 const topicsReview = ref([]);
+const lichHenData = ref([]);
 
 // Hover theo đề tài cho bảng điểm phản biện
 const hoveredTopicKey = ref(null);
@@ -878,9 +886,19 @@ async function fetchTopics() {
     }
 }
 
+async function fetchLichHen() {
+    try {
+        const res = await axios.get("/lich-hen");
+        lichHenData.value = res.data || [];
+    } catch (e) {
+        console.error(e);
+    }
+}
+
 onMounted(() => {
     fetchStudents();
     fetchTopics();
+    fetchLichHen();
     fetchGrade50Access();
     fetchGuideAccess();
     fetchReviewAccess();
@@ -1659,7 +1677,7 @@ const filteredGuideScoreList = computed(() => {
     return result;
 });
 const canGrade50 = ref(false);
-
+2
 async function fetchGrade50Access() {
     try {
         const res = await axios.get(
