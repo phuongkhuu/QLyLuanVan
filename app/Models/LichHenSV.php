@@ -14,8 +14,6 @@ class LichHenSV extends Model
 
     // Các cột được phép thêm/sửa dữ liệu hàng loạt
     protected $fillable = [
-        'MSSV', 
-        'MaDT', 
         'MaGV', 
         'ThoiGianGap', 
         'DiaDiem', 

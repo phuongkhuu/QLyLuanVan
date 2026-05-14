@@ -11,16 +11,12 @@ class LichHenController extends Controller
     public function index(): JsonResponse
     {
         $lichHen = LichHenSV::with(['sinhvien', 'detai'])
-            ->where('MaGV', $maGV)
+            ->where('MaGV', auth()->user()->giangvien->MaGV)
             ->orderBy('ThoiGianGap', 'desc')
             ->get()
             ->map(function ($item) {
                 return [
                     'id'          => $item->id,
-                    'MSSV'        => $item->MSSV,
-                    'studentName' => $item->sinhvien?->Ho_va_Ten ?? '',
-                    'topic'       => $item->detai?->TenDeTai ?? '',
-                    'MaDT'        => $item->MaDT,
                     'ThoiGianGap' => $item->ThoiGianGap,
                     'DiaDiem'     => $item->DiaDiem,
                     'TrangThai'   => $item->TrangThai,
@@ -38,8 +34,6 @@ class LichHenController extends Controller
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'MSSV'        => 'required|string|exists:SinhVien,MSSV',
-            'MaDT'        => 'nullable|string|exists:DeTai,MaDT',
             'ThoiGianGap' => 'required|date',
             'DiaDiem'     => 'required|string',
             'LoaiLich'    => 'required|integer|in:1,2',   // 1 = Hướng dẫn, 2 = Phản biện
@@ -47,12 +41,8 @@ class LichHenController extends Controller
             'GhiChu'      => 'nullable|string',
         ]);
 
-        // Dùng mã giảng viên đăng nhập
-        // $maGV = auth()->user()->giangvien->MaGV;
 
         $lich = LichHenSV::create([
-            'MSSV'        => $validated['MSSV'],
-            'MaDT'        => $validated['MaDT'] ?? null,
             'MaGV'        => auth()->user()->giangvien->MaGV,          // thay bằng $maGV
             'ThoiGianGap' => $validated['ThoiGianGap'],
             'DiaDiem'     => $validated['DiaDiem'],
@@ -64,15 +54,31 @@ class LichHenController extends Controller
         // Trả về đối tượng vừa tạo kèm quan hệ
         return response()->json($lich->load(['sinhvien', 'detai']), 201);
     }
+    /**
+    * Cập nhật lịch hẹn.
+    */
+
+    public function update(Request $request, $id)
+    {
+        $lich = LichHenSV::findOrFail($id);
+
+        $validated = $request->validate([
+            'ThoiGianGap' => 'sometimes|date',
+            'DiaDiem'     => 'sometimes|string',
+            'LoaiLich'    => 'sometimes|integer|in:1,2',
+            'TrangThai'   => 'sometimes|string',
+            'GhiChu'      => 'nullable|string',
+        ]);
+
+        $lich->update($validated);
+    }
 
     /**
      * Xoá lịch hẹn.
      */
-    public function destroy($id): JsonResponse
+    public function destroy(Request $request, $id)
     {
         $lich = LichHenSV::findOrFail($id);
         $lich->delete();
-
-        return response()->json(['message' => 'Xoá lịch thành công']);
     }
 }

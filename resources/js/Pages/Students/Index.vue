@@ -80,7 +80,7 @@ const isLoading = ref(false)
 // ----- Evaluation state (MISSING) -----
 const evaluation = ref(null)           
 const loadingEvaluation = ref(false)
-const student = ref(null)              // Add student state to pass to StudentInfo component
+const student = ref(null)             
 const review = ref(null)
 const loadingReview = ref(false)
 const defense = ref(null)

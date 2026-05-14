@@ -67,7 +67,7 @@
                 <AppointmentView
                     v-if="currentView === 'AppointmentView'"
                     :lichHenData="lichHenData"
-                    :sinhVienData="students"
+                    :fetchLichHen="fetchLichHen"
                 />
                 <!-- Mini Form ĐIỂM PHẢN BIỆN -->
                 <div

@@ -5,14 +5,7 @@
                 Quản lý lịch gặp sinh viên
             </h2>
 
-            <div class="flex items-center gap-4">
-                <input
-                    v-model="searchQuery"
-                    type="text"
-                    placeholder="Tìm mã hoặc tên đề tài..."
-                    class="border border-gray-300 rounded px-3 py-2 text-sm w-64 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                />
-                
+            <div class="flex items-center gap-4">                
                 <button 
                     @click="openCreateModal" 
                     class="bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium flex items-center gap-2 hover:bg-blue-700 transition-colors shadow-sm"
@@ -46,9 +39,6 @@
                 <thead class="bg-indigo-50 text-indigo-800">
                     <tr>
                         <th class="p-3 text-center font-semibold">STT</th>
-                        <th class="p-3 text-center font-semibold">MSSV</th>
-                        <th class="p-3 text-center font-semibold">Họ và tên sinh viên</th>
-                        <th class="p-3 text-center font-semibold max-w-sm">Tên đề tài</th>
                         <th class="p-3 text-center font-semibold">Thời gian gặp</th>
                         <th class="p-3 text-center font-semibold">Địa điểm</th>
                         <th class="p-3 text-center font-semibold">Trạng thái</th>
@@ -63,9 +53,6 @@
                     </tr>
                     <tr v-for="(item, index) in filteredSchedules" :key="item.id" class="hover:bg-indigo-50 transition-colors">
                         <td class="p-3 text-center">{{ index + 1 }}</td>
-                        <td class="p-3 text-center">{{ item.studentId }}</td>
-                        <td class="p-3 text-center">{{ item.studentName }}</td>
-                        <td class="p-3 text-center max-w-sm leading-relaxed">{{ item.topic }}</td>
                         <td class="p-3 text-center">
                             <template v-if="item.time">
                                 <div class="font-bold text-gray-800">{{ item.time.hour }}</div>
@@ -113,38 +100,15 @@
                 </div>
 
                 <div class="px-6 py-5 flex-1 overflow-y-auto space-y-4 text-sm">
-                    <div class="flex flex-col gap-1">
-                        <label class="font-medium text-gray-700">Chọn Sinh viên (MSSV / Họ và tên)</label>
-                        <div class="relative">
-                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
-                                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                            </span>
-                            <select v-model="formSchedule.studentId" @change="autoFillTopic" class="w-full pl-9 pr-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none appearance-none bg-white">
-                                <option value="" disabled>Tìm mã hoặc tên sinh viên...</option>
-                                <option v-for="student in studentList" :key="student.id" :value="student.id">
-                                    {{ student.id }} - {{ student.name }}
-                                </option>
-                            </select>
-                            <span class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400">
-                                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                            </span>
-                        </div>
-                    </div>
-
-                    <div class="flex flex-col gap-1">
-                        <label class="font-medium text-gray-700">Tên đề tài</label>
-                        <input v-model="formSchedule.topic" type="text" class="w-full px-3 py-2 border border-blue-400 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none" />
-                    </div>
-
                     <div class="flex flex-col gap-2 pt-1">
                         <label class="font-medium text-gray-700">Loại lịch hẹn</label>
                         <div class="flex gap-6">
                             <label class="flex items-center gap-2 cursor-pointer">
-                                <input type="checkbox" v-model="formSchedule.isGuide" class="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500">
+                                <input type="radio" v-model="formSchedule.scheduleType" value="guide" class="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500">
                                 <span class="text-gray-700">Lịch Hướng dẫn</span>
                             </label>
                             <label class="flex items-center gap-2 cursor-pointer">
-                                <input type="checkbox" v-model="formSchedule.isReview" class="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500">
+                                <input type="radio" v-model="formSchedule.scheduleType" value="review" class="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500">
                                 <span class="text-gray-700">Lịch Phản biện</span>
                             </label>
                         </div>
@@ -172,6 +136,15 @@
                                 <option value="Online (Google Meet)">Online (Google Meet)</option>
                                 <option value="Tùy chỉnh...">Tùy chỉnh...</option>
                             </select>
+
+                            <!-- Custom location input – appears only when "Tùy chỉnh..." is selected -->
+                            <input 
+                                v-if="formSchedule.location === 'Tùy chỉnh...'"
+                                type="text"
+                                v-model="customLocation"
+                                placeholder="Nhập địa điểm tùy chỉnh..."
+                                class="mt-2 w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 outline-none"
+                            >
                         </div>
                     </div>
 
@@ -192,7 +165,7 @@
             </div>
         </div>
 
-        <!-- Modal Chi tiết -->
+        <!-- Modal Chi tiết + Chỉnh sửa -->
         <div v-if="isDetailModalOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
             <div class="bg-white rounded-xl shadow-2xl w-[600px] overflow-hidden flex flex-col">
                 <div class="flex justify-between items-center px-6 py-4 border-b border-gray-200">
@@ -202,71 +175,79 @@
                     </button>
                 </div>
 
-                <div class="px-6 py-5 flex-1 overflow-y-auto text-sm text-gray-800" v-if="selectedMeeting">
-                    <div class="mb-5">
-                        <h4 class="font-semibold text-base mb-2">Thông tin sinh viên</h4>
-                        <p class="text-gray-900">
-                            <span class="font-medium">MSSV:</span> {{ selectedMeeting.studentId }} <span class="mx-2 text-gray-400">|</span> 
-                            <span class="font-medium">Họ và tên:</span> {{ selectedMeeting.studentName }}
-                        </p>
+                <div class="px-6 py-5 flex-1 overflow-y-auto space-y-4 text-sm" v-if="selectedMeeting">
+                    <!-- Loại lịch hẹn (radio) -->
+                    <div class="flex flex-col gap-2 pt-1">
+                        <label class="font-medium text-gray-700">Loại lịch hẹn</label>
+                        <div class="flex gap-6">
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="radio" v-model="editForm.scheduleType" value="guide" class="w-4 h-4 text-blue-600 rounded border-gray-300">
+                                <span class="text-gray-700">Lịch Hướng dẫn</span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="radio" v-model="editForm.scheduleType" value="review" class="w-4 h-4 text-blue-600 rounded border-gray-300">
+                                <span class="text-gray-700">Lịch Phản biện</span>
+                            </label>
+                        </div>
                     </div>
 
-                    <div>
-                        <h4 class="font-semibold text-base mb-3">Thông tin lịch hẹn</h4>
-                        
-                        <div class="mb-3">
-                            <label class="block text-gray-700 mb-1">Tên đề tài</label>
-                            <input type="text" :value="selectedMeeting.topic" disabled class="w-full px-3 py-2 bg-gray-200 border border-gray-300 rounded text-gray-700 outline-none cursor-not-allowed" />
-                        </div>
-
-                        <div class="mb-4">
-                            <label class="block text-gray-700 mb-1">Loại lịch hẹn</label>
-                            <div class="flex gap-6 mt-1">
-                                <label class="flex items-center gap-2 cursor-not-allowed">
-                                    <input type="checkbox" disabled :checked="activeTab === 'guide'" class="w-4 h-4 text-gray-400 bg-gray-200 rounded border-gray-300">
-                                    <span class="text-gray-500">Lịch Hướng dẫn</span>
-                                </label>
-                                <label class="flex items-center gap-2 cursor-not-allowed">
-                                    <input type="checkbox" disabled :checked="activeTab === 'review'" class="w-4 h-4 text-gray-400 bg-gray-200 rounded border-gray-300">
-                                    <span class="text-gray-500">Lịch Phản biện</span>
-                                </label>
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-3 gap-4 mb-4">
-                            <div>
-                                <label class="block text-gray-700 mb-1">Thời gian gặp</label>
-                                <p class="font-medium">{{ selectedMeeting.time?.date || '-' }}</p>
-                            </div>
-                            <div>
-                                <label class="block text-gray-700 mb-1">Giờ gặp</label>
-                                <p class="font-medium">{{ selectedMeeting.time?.hour || '-' }}</p>
-                            </div>
-                            <div>
-                                <label class="block text-gray-700 mb-1">Địa điểm gặp</label>
-                                <p class="font-medium mb-3">{{ selectedMeeting.location ? selectedMeeting.location.join(' ') : '-' }}</p>
-                                
-                                <div class="flex items-center gap-2">
-                                    <label class="text-gray-700">Trạng thái:</label>
-                                    <span v-if="selectedMeeting.status === 'confirmed'" class="bg-green-500 text-white px-2.5 py-1 rounded text-xs font-medium">Đã xác nhận</span>
-                                    <span v-else-if="selectedMeeting.status === 'pending'" class="bg-yellow-500 text-white px-2.5 py-1 rounded text-xs font-medium">Chờ xác nhận</span>
+                    <!-- Thời gian & Địa điểm -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="flex flex-col gap-1">
+                            <label class="font-medium text-gray-700">Thời gian gặp</label>
+                            <div class="flex gap-2">
+                                <div class="relative w-3/5">
+                                    <input type="date" v-model="editForm.date" class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 outline-none" />
+                                </div>
+                                <div class="relative w-2/5">
+                                    <input type="time" v-model="editForm.time" class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 outline-none" />
                                 </div>
                             </div>
                         </div>
 
-                        <div class="mt-2">
-                            <label class="block text-gray-700 mb-1">Ghi chú</label>
-                            <textarea disabled rows="2" class="w-full px-3 py-2 bg-gray-200 border border-gray-300 rounded text-gray-700 outline-none resize-none cursor-not-allowed" :value="selectedMeeting.note || 'Yêu cầu chuẩn bị báo cáo tiến độ và demo ứng dụng. Có mặt đúng giờ.'"></textarea>
+                        <div class="flex flex-col gap-1">
+                            <label class="font-medium text-gray-700">Địa điểm</label>
+                            <select v-model="editForm.location" class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 outline-none bg-white">
+                                <option value="Văn phòng Khoa">Văn phòng Khoa</option>
+                                <option value="Thư viện">Thư viện</option>
+                                <option value="Online (Zoom)">Online (Zoom)</option>
+                                <option value="Online (Google Meet)">Online (Google Meet)</option>
+                                <option value="Tùy chỉnh...">Tùy chỉnh...</option>
+                            </select>
+
+                            <!-- Custom location input -->
+                            <input 
+                                v-if="editForm.location === 'Tùy chỉnh...'"
+                                type="text"
+                                v-model="editCustomLocation"
+                                placeholder="Nhập địa điểm tùy chỉnh..."
+                                class="mt-2 w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 outline-none"
+                            >
                         </div>
+                    </div>
+
+                    <!-- Trạng thái (có thể chỉnh sửa nếu muốn) -->
+                    <div class="flex flex-col gap-1">
+                        <label class="font-medium text-gray-700">Trạng thái</label>
+                        <select v-model="editForm.status" class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 outline-none bg-white">
+                            <option value="pending">Chờ xác nhận</option>
+                            <option value="confirmed">Đã xác nhận</option>
+                        </select>
+                    </div>
+
+                    <!-- Ghi chú -->
+                    <div class="flex flex-col gap-1">
+                        <label class="font-medium text-gray-700">Ghi chú (Tùy chọn)</label>
+                        <textarea v-model="editForm.note" rows="3" placeholder="Yêu cầu chuẩn bị báo cáo tiến độ..." class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 outline-none resize-none"></textarea>
                     </div>
                 </div>
 
                 <div class="px-6 py-4 bg-white flex justify-end gap-3 rounded-b-xl border-t border-gray-200">
                     <button @click="closeDetailModal" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 border border-gray-300 text-gray-700 rounded text-sm font-medium transition-colors">
-                        Đóng
+                        Hủy
                     </button>
-                    <button class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-medium transition-colors">
-                        Sửa thông tin
+                    <button @click="updateSchedule" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-medium transition-colors">
+                        Cập nhật
                     </button>
                 </div>
             </div>
@@ -287,10 +268,7 @@ const props = defineProps({
         type: Array,
         default: () => []
     },
-    sinhVienData: {
-        type: Array,
-        default: () => []
-    }
+    fetchLichHen: Function
 });
 
 const searchQuery = ref('');
@@ -299,29 +277,16 @@ const activeTab = ref('guide');
 // ==========================================
 // 2. XỬ LÝ DỮ LIỆU (FORMAT TỪ DATABASE RA GIAO DIỆN)
 // ==========================================
-// Chuyển đổi dữ liệu sinh viên cho thẻ Select
-const studentList = computed(() => {
-    return props.sinhVienData.map(sv => ({
-        id: sv.mssv,
-        name: sv.name,
-        topic: sv.topic,
-        MaDT: sv.MaDT
-    }));
-});
-
 // Format dữ liệu lịch hẹn từ DB sang cấu trúc HTML đang dùng
 const allFormattedSchedules = computed(() => {
     return props.lichHenData.map(dbItem => {
         const dateObj = new Date(dbItem.ThoiGianGap);
         // Fix bù múi giờ nếu cần, hoặc dùng trực tiếp
         const hourStr = dateObj.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', hour12: false });
-        const dateStr = dateObj.toLocaleDateString('vi-VN'); // DD/MM/YYYY
+        const dateStr = dateObj.toLocaleDateString('vi-VN');
 
         return {
             id: dbItem.id,
-            studentId: dbItem.MSSV,
-            studentName: dbItem.sinhvien ? dbItem.sinhvien.Ho_va_Ten : 'N/A',
-            topic: dbItem.detai ? dbItem.detai.TenDeTai : 'Chưa có đề tài',
             time: { hour: hourStr, date: dateStr },
             location: dbItem.DiaDiem ? dbItem.DiaDiem.split(', ') : [],
             status: dbItem.TrangThai === 'Đã xác nhận' ? 'confirmed' : 'pending',
@@ -341,10 +306,7 @@ const filteredSchedules = computed(() => {
     const q = searchQuery.value.trim().toLowerCase();
     if (!q) return currentData;
 
-    return currentData.filter(item => {
-        const textToSearch = [item.studentId, item.studentName, item.topic].join(' ').toLowerCase();
-        return textToSearch.includes(q);
-    });
+    return currentData;
 });
 
 // ==========================================
@@ -352,26 +314,17 @@ const filteredSchedules = computed(() => {
 // ==========================================
 const isCreateModalOpen = ref(false);
 const formSchedule = ref({
-    studentId: '',
-    topic: '',
-    MaDT: null,
-    isGuide: true,
-    isReview: false,
+    id: null,
+    scheduleType: 'guide',
     date: '',
     time: '',
     location: 'Văn phòng Khoa',
-    note: ''
+    note: '',
+    customLocation: ''
 });
 
 const openCreateModal = () => {
     resetForm();
-    isCreateModalOpen.value = true;
-};
-
-const openCreateModalWithStudent = (studentItem) => {
-    resetForm();
-    formSchedule.value.studentId = studentItem.studentId;
-    formSchedule.value.topic = studentItem.topic;
     isCreateModalOpen.value = true;
 };
 
@@ -381,34 +334,27 @@ const closeCreateModal = () => {
 
 const resetForm = () => {
     formSchedule.value = {
-        studentId: '', topic: '', MaDT: null, isGuide: true, isReview: false,
-        date: '', time: '', location: 'Văn phòng Khoa', note: ''
+        id: null,
+        scheduleType: 'guide',
+        date: '', time: '', location: 'Văn phòng Khoa', note: '', customLocation: ''
     };
 };
 
-const autoFillTopic = () => {
-    const selected = studentList.value.find(s => s.id === formSchedule.value.studentId);
-    if (selected) {
-        formSchedule.value.topic = selected.topic;
-        formSchedule.value.MaDT = selected.MaDT;
-    }
-};
 
 const saveSchedule = async () => {
-    if (!formSchedule.value.studentId || !formSchedule.value.date || !formSchedule.value.time) {
+    if (!formSchedule.value.date || !formSchedule.value.time) {
         alert('Vui lòng điền đủ thông tin sinh viên, ngày và giờ!');
         return;
     }
+    console.log('Form data to save:', formSchedule.value);
 
     const datetime = `${formSchedule.value.date} ${formSchedule.value.time}:00`;
 
     const payload = {
-        MSSV: formSchedule.value.studentId,
-        MaDT: formSchedule.value.MaDT || null,
         ThoiGianGap: datetime,
-        DiaDiem: formSchedule.value.location,
+        DiaDiem: formSchedule.value.location === 'Tùy chỉnh...' ? formSchedule.value.customLocation : formSchedule.value.location,
         TrangThai: 'Chờ xác nhận',
-        LoaiLich: formSchedule.value.isGuide ? 1 : 2,
+        LoaiLich: formSchedule.value.scheduleType === 'guide' ? 1 : 2,
         GhiChu: formSchedule.value.note || null
     };
 
@@ -416,6 +362,7 @@ const saveSchedule = async () => {
         await axios.post(route('lichhen.store'), payload);
         alert('Tạo lịch gặp mới thành công!');
         closeCreateModal();
+        props.fetchLichHen(); // Refresh danh sách sau khi tạo mới
         // Sau khi tạo, bạn có thể muốn refresh danh sách lịch hẹn
         // fetchLichHen(); // hoặc emit một event
     } catch (error) {
@@ -440,24 +387,130 @@ const deleteSchedule = (id) => {
         preserveScroll: true,
         onSuccess: () => alert('Đã xóa thành công!')
     });
+
+    props.fetchLichHen(); // Refresh danh sách sau khi xóa
 };
 
 // ==========================================
 // 5. LOGIC MODAL CHI TIẾT
 // ==========================================
+
 const isDetailModalOpen = ref(false);
 const selectedMeeting = ref(null);
+const editForm = ref({
+    id: null,
+    scheduleType: 'guide',
+    date: '',
+    time: '',
+    location: 'Văn phòng Khoa',
+    status: 'pending',
+    note: ''
+});
+const editCustomLocation = ref('');
 
+// Override openDetailModal to populate editForm
 const openDetailModal = (meetingItem) => {
-    selectedMeeting.value = { ...meetingItem };
-    if (!selectedMeeting.value.note) {
-        selectedMeeting.value.note = "Không có ghi chú thêm.";
+    // meetingItem comes from filteredSchedules (formatted)
+    // Extract date and time in editable format
+    let dateStr = '';
+    let timeStr = '';
+    if (meetingItem.rawDatetime) {
+        const d = new Date(meetingItem.rawDatetime);
+        dateStr = d.toISOString().split('T')[0];
+        timeStr = d.toTimeString().slice(0, 5);
+    } else {
+        // Fallback: parse from meetingItem.time.date (dd/mm/yyyy) and hour
+        const [day, month, year] = meetingItem.time.date.split('/');
+        dateStr = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+        timeStr = meetingItem.time.hour;
     }
+
+    // Determine location value
+    const locationString = meetingItem.location.join(', ');
+    let locValue = locationString;
+    let customLoc = '';
+    const presetLocations = ['Văn phòng Khoa', 'Thư viện', 'Online (Zoom)', 'Online (Google Meet)'];
+    if (!presetLocations.includes(locationString)) {
+        locValue = 'Tùy chỉnh...';
+        customLoc = locationString;
+    }
+
+    editForm.value = {
+        id: meetingItem.id,
+        scheduleType: meetingItem.LoaiLich === 1 ? 'guide' : 'review',
+        date: dateStr,
+        time: timeStr,
+        location: locValue,
+        status: meetingItem.status,   // 'pending' or 'confirmed'
+        note: meetingItem.note || ''
+    };
+    editCustomLocation.value = customLoc;
+
+    selectedMeeting.value = { ...meetingItem }; // keep original for reference
     isDetailModalOpen.value = true;
 };
 
+// Update function
+const updateSchedule = async () => {
+    if (!editForm.value.date || !editForm.value.time) {
+        alert('Vui lòng điền đủ ngày và giờ!');
+        return;
+    }
+
+    const datetime = `${editForm.value.date} ${editForm.value.time}:00`;
+    
+    let finalLocation = editForm.value.location;
+    if (finalLocation === 'Tùy chỉnh...') {
+        if (!editCustomLocation.value.trim()) {
+            alert('Vui lòng nhập địa điểm tùy chỉnh!');
+            return;
+        }
+        finalLocation = editCustomLocation.value.trim();
+    }
+
+    // Map status from frontend to backend format
+    const backendStatus = editForm.value.status === 'confirmed' ? 'Đã xác nhận' : 'Chờ xác nhận';
+
+    const payload = {
+        ThoiGianGap: datetime,
+        DiaDiem: finalLocation,
+        TrangThai: backendStatus,
+        LoaiLich: editForm.value.scheduleType === 'guide' ? 1 : 2,
+        GhiChu: editForm.value.note || null
+    };
+
+    try {
+        await axios.put(route('lichhen.update', editForm.value.id), payload);
+        alert('Cập nhật lịch thành công!');
+        closeDetailModal();
+        props.fetchLichHen(); // Refresh danh sách sau khi cập nhật
+    } catch (error) {
+        console.error(error);
+        if (error.response?.data?.errors) {
+            const messages = Object.values(error.response.data.errors).flat().join('\n');
+            alert('Lỗi: ' + messages);
+        } else {
+            alert('Có lỗi xảy ra khi cập nhật!');
+        }
+    }
+};
+
+// Close modal (reset editForm optionally)
 const closeDetailModal = () => {
     isDetailModalOpen.value = false;
-    setTimeout(() => { selectedMeeting.value = null; }, 200);
+    setTimeout(() => {
+        selectedMeeting.value = null;
+        // Optional: reset editForm to avoid old data showing next time
+        editForm.value = {
+            id: null,
+            scheduleType: 'guide',
+            date: '',
+            time: '',
+            location: 'Văn phòng Khoa',
+            status: 'pending',
+            note: ''
+        };
+        editCustomLocation.value = '';
+    }, 200);
 };
 </script>

@@ -202,5 +202,4 @@ Route::get(
 Route::get('/lich-hen', [LichHenController::class, 'index'])->name('lichhen.index');
 Route::post('/lich-hen', [LichHenController::class, 'store'])->name('lichhen.store');
 Route::delete('/lich-hen/{id}', [LichHenController::class, 'destroy'])->name('lichhen.destroy');
-
-Route::get('/sinhvien/{mssv}', [StudentController::class, 'layDataSinhVienTheoMSSV']);
+Route::put('/lichhen/{id}', [LichHenController::class, 'update'])->name('lichhen.update');
