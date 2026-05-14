@@ -57,6 +57,11 @@
                         currentView === 'defenseCommittee'
                     "
                 />
+                <test
+                    v-if="
+                        currentView === 'test'
+                    "
+                />
 
             </main>
         </div>
@@ -78,6 +83,8 @@ import Score50 from "./pages/Score50.vue"
 import ReviewLecturer from "./pages/ReviewLecturer.vue"
 import DefenseCommittee from "./pages/DefenseCommittee.vue"
 import ReviewSchedule from "./pages/ReviewSchedule.vue"
+
+import test from "./pages/test.vue"
 
 defineProps({
     user: Object,
