@@ -22,7 +22,7 @@
                 <!-- Students view -->
                 <StudentsView
                     v-if="currentView === 'students'"
-                    :students="students"
+                    :students="students1"
                 />
 
                 <!-- Assign Topic view -->
@@ -63,12 +63,7 @@
                     @leaveTopic="clearHoveredTopic"
                     :isTopicHovered="isTopicHovered"
                 />
-                <!-- Lịch gặp sinh viên -->
-                <AppointmentView
-                    v-if="currentView === 'AppointmentView'"
-                    :lichHenData="lichHenData"
-                    :sinhVienData="students"
-                />
+
                 <!-- Mini Form ĐIỂM PHẢN BIỆN -->
                 <div
                     v-if="showReviewScoreMiniForm"
@@ -775,8 +770,6 @@ import AssignTopicView from "./components/AssignTopicView.vue";
 import AssignTopicModal from "./components/AssignTopicModal.vue";
 import Evaluation50View from "./components/Evaluation50View.vue";
 import ReviewScoreView from "./components/ReviewScoreView.vue";
-// cập nhật GUI
-import AppointmentView from "./components/AppointmentView.vue";
 
 const props = defineProps({
     user: { type: Object, default: () => ({ name: "Giảng viên" }) },
@@ -791,7 +784,6 @@ const students1 = ref([]);
 const studentsReviewer = ref([]);
 const topics = ref([]);
 const topicsReview = ref([]);
-const lichHenData = ref([]);
 
 // Hover theo đề tài cho bảng điểm phản biện
 const hoveredTopicKey = ref(null);
@@ -848,7 +840,6 @@ const fetchStudents = async () => {
         const guideStudents = (resTeacher.data || []).map((s) =>
             normalizeStudent(s, "guide"),
         );
-
         const reviewerStudents = (resReviewer.data || []).map((s) =>
             normalizeStudent(s, "reviewer"),
         );
@@ -887,19 +878,9 @@ async function fetchTopics() {
     }
 }
 
-async function fetchLichHen() {
-    try {
-        const res = await axios.get("/lich-hen");
-        lichHenData.value = res.data || [];
-    } catch (e) {
-        console.error(e);
-    }
-}
-
 onMounted(() => {
     fetchStudents();
     fetchTopics();
-    fetchLichHen();
     fetchGrade50Access();
     fetchGuideAccess();
     fetchReviewAccess();
@@ -953,62 +934,110 @@ const reviewScoreList = computed(() => {
 });
 
 const guidingScoreList = computed(() => {
-    const q = (guideScoreSearch.value || "").toString().toLowerCase().trim();
-    return (topics.value || []).filter((t) => {
-        if (!q) return true;
-        return (
-            (t.MaDT || t.id || "") +
-            " " +
-            (t.TenDeTai || t.TenDT || t.title || "")
-        )
-            .toLowerCase()
-            .includes(q);
-    });
-});
+    const q = (guideScoreSearch.value || '').toString().toLowerCase().trim();
 
-const guideScoreSearch = ref("");
-const guideScoreList = computed(() => {
-    const result = [];
-    let sttCounter = 0;
+    // -------------------------------------------------------------------
+    // 1. Build flat list of ALL rows (topic + students + orphans)
+    // -------------------------------------------------------------------
+    const allRows = [];
 
-    (guidingScoreList.value || []).forEach((topic) => {
-        const students = getStudentsOfTopic(topic);
-
-        sttCounter++;
-
-        if (!students.length) {
-            result.push({
-                topic,
-                MSSV: "",
-                name: "",
-                group: "",
-                isFirst: true,
-                stt: sttCounter,
-                rowSpan: 1,
-            });
-            return;
-        }
-
-        // ✅ sort ONLY students of this topic
-        const sortedStudents = [...students].sort(
-            (a, b) => (Number(a.group) || 999) - (Number(b.group) || 999),
+    // 1a. From each topic, add its students (or one empty row if no students)
+    (topics.value || []).forEach(topic => {
+        const students = getStudentsOfTopic(topic);   // still works on the real topic
+        const sorted = [...students].sort(
+            (a, b) => (Number(a.group) || 999) - (Number(b.group) || 999)
         );
 
-        sortedStudents.forEach((stu, idx) => {
-            result.push({
+        if (sorted.length === 0) {
+            allRows.push({
                 topic,
-                MSSV: stu.mssv,
-                name: stu.name,
-                group: stu.group,
-                isFirst: idx === 0,
-                stt: idx === 0 ? sttCounter : null,
-                rowSpan: idx === 0 ? sortedStudents.length : null,
+                MSSV: '',
+                name: '',
+                group: '',
             });
+        } else {
+            sorted.forEach(s => {
+                allRows.push({
+                    topic,
+                    MSSV: s.mssv,
+                    name: s.name,
+                    group: s.group,
+                });
+            });
+        }
+    });
+
+    // 1b. Add students that are **not assigned** to any topic
+    const assignedMSSVs = new Set(allRows.filter(r => r.MSSV).map(r => r.MSSV));
+    const orphans = (students1.value || []).filter(s => !assignedMSSVs.has(s.mssv));
+    orphans.forEach(s => {
+        allRows.push({
+            topic: null,
+            MSSV: s.mssv,
+            name: s.name,
+            group: s.group,
         });
     });
 
+    // -------------------------------------------------------------------
+    // 2. Filter by search query (on both student and topic fields)
+    // -------------------------------------------------------------------
+    let filtered = allRows;
+    if (q) {
+        filtered = allRows.filter(row => {
+            const t = row.topic || {};
+            const text = [
+                row.MSSV,
+                row.name,
+                row.group,
+                t.MaDT || t.code || '',
+                t.TenDeTai || t.TenDT || t.title || '',
+                t.MoTa || t.description || '',
+                t.TrangThai || t.status || '',
+            ]
+                .join(' ')
+                .toLowerCase();
+            return text.includes(q);
+        });
+    }
+
+    // -------------------------------------------------------------------
+    // 3. Add display helpers: stt, isFirst, rowSpan
+    //    (group consecutive rows that share the same topic)
+    // -------------------------------------------------------------------
+    let sttCounter = 0;
+    const result = [];
+    let i = 0;
+    while (i < filtered.length) {
+        // Identify the group: all rows with the same topic reference.
+        // For orphan rows (topic == null), each gets its own group.
+        const currentTopic = filtered[i].topic;
+        let j = i;
+        while (j < filtered.length && filtered[j].topic === currentTopic) {
+            j++;
+        }
+        const group = filtered.slice(i, j);
+        sttCounter++;
+
+        group.forEach((row, idx) => {
+            result.push({
+                ...row,
+                isFirst: idx === 0,
+                stt: idx === 0 ? sttCounter : null,
+                rowSpan: idx === 0 ? group.length : null,
+            });
+        });
+
+        i = j;
+    }
+
     return result;
 });
+
+// guideScoreList is now just an alias – you can delete this and use guidingScoreList directly in your template
+const guideScoreList = computed(() => guidingScoreList.value);
+const guideScoreSearch = ref("");
+
 const rawReviewScoreRows = computed(() => {
     const result = [];
     let sttCounter = 0;
@@ -1477,9 +1506,10 @@ async function openAssignForm(student) {
     const teacher = await axios.post("/teacher-by-id/" + props.user.id);
     formData.MaGV = teacher.data.MaGV || "";
     formData.MSSV = student.mssv || student.MSSV || "";
-    formData.TenDT = student.topic.TenDeTai || "";
-    formData.MoTa = student.topic.MoTa || "";
-    formData.TrangThai = student.topic.TrangThai || "";
+    // ✅ safe access even when topic is null
+    formData.TenDT = student.topic?.TenDeTai || "";
+    formData.MoTa = student.topic?.MoTa || "";
+    formData.TrangThai = student.topic?.TrangThai || "Được tiếp tục";
     showForm.value = true;
 }
 async function downloadTemplate(MaDT) {
@@ -1511,23 +1541,25 @@ async function downloadTemplate(MaDT) {
     document.body.removeChild(a);
     window.URL.revokeObjectURL(url);
 }
-async function saveForm() {
+async function saveForm(updatedForm) {
     try {
-        console.log("Saving form data:", formData);
-        const res = await axios.post("/save-topic", {
-            MSSV: formData.MSSV,
-            TenDT: formData.TenDT,
-            MoTa: formData.MoTa,
-            TrangThai: formData.TrangThai,
-            MaGV: formData.MaGV,
-        });
-
-        alert("Lưu đề tài & cập nhật sinh viên thành công!");
+        const payload = {
+            MSSV: formData.MSSV,               
+            TenDT: updatedForm.TenDT,         
+            MoTa: updatedForm.MoTa,
+            TrangThai: updatedForm.TrangThai,
+            MaGV: formData.MaGV,              
+        };
+        await axios.post("/save-topic", payload);
+        alert("Lưu thành công!");
         showForm.value = false;
         fetchStudents();
         fetchTopics();
     } catch (err) {
-        alert(err.response?.data?.error || "Lỗi khi lưu form");
+        const msg = err.response?.data?.errors
+            ? Object.values(err.response.data.errors).flat().join('\n')
+            : err.response?.data?.message || "Lỗi khi lưu";
+        alert(msg);
     }
 }
 function closeForm() {
@@ -1536,31 +1568,98 @@ function closeForm() {
 
 const assignSearch = ref("");
 const filteredGuideScoreList = computed(() => {
-    const q = assignSearch.value.toLowerCase().trim();
-    if (!q) return guideScoreList.value || [];
+    const q = (assignSearch.value || '').toLowerCase().trim();
 
-    return (guideScoreList.value || []).filter((row) => {
-        const t = row.topic || {};
+    // ------------------------------------------------------------------
+    // 1. Build ALL possible rows (same as your guidingScoreList logic)
+    // ------------------------------------------------------------------
+    const allRows = [];
 
-        const text = [
-            row.MSSV,
-            row.name,
-            row.group,
+    (topics.value || []).forEach(topic => {
+        const students = getStudentsOfTopic(topic);
+        const sorted = [...students].sort(
+            (a, b) => (Number(a.group) || 999) - (Number(b.group) || 999)
+        );
 
-            t.MaDT || t.code,
-            t.TenDeTai || t.TenDT || t.title,
-            t.MoTa || t.description,
-            t.TrangThai || t.status,
-        ]
-            .join(" ")
-            .toLowerCase();
-
-        return text.includes(q);
+        if (sorted.length === 0) {
+            allRows.push({ topic, MSSV: '', name: '', group: '' });
+        } else {
+            sorted.forEach(s => {
+                allRows.push({ topic, MSSV: s.mssv, name: s.name, group: s.group });
+            });
+        }
     });
-});
 
+    // Add orphans (students without a topic)
+    const assignedMSSVs = new Set(allRows.filter(r => r.MSSV).map(r => r.MSSV));
+    const orphans = (students1.value || []).filter(s => !assignedMSSVs.has(s.mssv));
+    orphans.forEach(s => {
+        allRows.push({ topic: null, MSSV: s.mssv, name: s.name, group: s.group });
+    });
+
+    // ------------------------------------------------------------------
+    // 2. Apply search filter (on both student & topic fields)
+    // ------------------------------------------------------------------
+    let filtered = allRows;
+    if (q) {
+        filtered = allRows.filter(row => {
+            const t = row.topic || {};
+            const text = [
+                row.MSSV,
+                row.name,
+                row.group,
+                t.MaDT || t.code || '',
+                t.TenDeTai || t.TenDT || t.title || '',
+                t.MoTa || t.description || '',
+                t.TrangThai || t.status || '',
+            ]
+                .join(' ')
+                .toLowerCase();
+            return text.includes(q);
+        });
+    }
+
+    // ------------------------------------------------------------------
+    // 3. Sort by group number ascending (lowest first)
+    //    (Rows without a group go to the end)
+    // ------------------------------------------------------------------
+    filtered.sort((a, b) => {
+        const gA = parseInt(a.group) || 9999;
+        const gB = parseInt(b.group) || 9999;
+        return gA - gB;
+    });
+
+    // ------------------------------------------------------------------
+    // 4. Re‑group consecutive rows by topic and add display helpers
+    // ------------------------------------------------------------------
+    let sttCounter = 0;
+    const result = [];
+    let i = 0;
+    while (i < filtered.length) {
+        const currentTopic = filtered[i].topic;
+        let j = i;
+        while (j < filtered.length && filtered[j].topic === currentTopic) {
+            j++;
+        }
+        const groupRows = filtered.slice(i, j);
+        sttCounter++;
+
+        groupRows.forEach((row, idx) => {
+            result.push({
+                ...row,
+                isFirst: idx === 0,
+                stt: idx === 0 ? sttCounter : null,
+                rowSpan: idx === 0 ? groupRows.length : null,
+            });
+        });
+
+        i = j;
+    }
+
+    return result;
+});
 const canGrade50 = ref(false);
-2
+
 async function fetchGrade50Access() {
     try {
         const res = await axios.get(
@@ -1645,20 +1744,6 @@ function updateNote(student) {
         })
         .catch((err) => {
             alert(err.response.data.error || "Cập nhật ghi chú thất bại!");
-        });
-    fetchStudents();
-}
-function updateGroup(student) {
-    axios
-        .post("/update-student-group", {
-            mssv: student.mssv,
-            group_number: student.group,
-        })
-        .then((res) => {
-            alert("Cập nhật nhóm thành công!");
-        })
-        .catch((err) => {
-            alert(err.response.data.error || "Cập nhật nhóm thất bại!");
         });
     fetchStudents();
 }
