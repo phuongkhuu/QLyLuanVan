@@ -200,6 +200,7 @@ Route::get(
 
 // === ROUTE QUẢN LÝ LỊCH HẸN ===
 Route::get('/lich-hen', [LichHenController::class, 'index'])->name('lichhen.index');
+Route::get('/lich-hen/{magv}', [LichHenController::class, 'show'])->name('lichhen.show');
 Route::post('/lich-hen', [LichHenController::class, 'store'])->name('lichhen.store');
 Route::delete('/lich-hen/{id}', [LichHenController::class, 'destroy'])->name('lichhen.destroy');
 Route::put('/lichhen/{id}', [LichHenController::class, 'update'])->name('lichhen.update');

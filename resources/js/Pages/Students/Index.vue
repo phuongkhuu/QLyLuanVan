@@ -22,7 +22,10 @@
         />
 
         <!--Lịch gặp GVHD -->
-        <MeetingSchedule v-if="currentView === 'meetingSchedule'" />
+        <MeetingSchedule v-if="currentView === 'meetingSchedule'" 
+          :lichHenData="lichHenData"
+          :gvhd="gvhd"
+        />
         <!--Đánh giá 50%-->
         <Score50
           v-if="currentView === 'score50'"
@@ -37,7 +40,10 @@
           :loading="loadingReview"
         />
         <!--Lịch phản biện-->
-        <ReviewSchedule v-if="currentView === 'reviewSchedule'" />
+        <ReviewSchedule v-if="currentView === 'reviewSchedule'" 
+          :reviewSchedules="lichHenData"
+          :reviewer="gvpb"
+        />
         <!--Hội đồng-->
         <DefenseCommittee
             v-if="currentView === 'defenseCommittee'"
@@ -86,6 +92,9 @@ const loadingReview = ref(false)
 const defense = ref(null)
 const committeeMembers = ref([])
 const loadingDefense = ref(false)
+const lichHenData = ref([]);
+const gvpb = ref(null);
+const gvhd = ref(null);
 
 // Fetch topics based on the current user (your existing code)
 watch(
@@ -97,6 +106,44 @@ watch(
   },
   { immediate: true }
 )
+
+async function fetchLichHenHuongDan() {
+    try {
+        const studenta = await axios.get(`/students/${props.mssv}`).then(res => res.data);
+        const res = await axios.get("/lich-hen/" + studenta.Giang_vien_huong_dan);
+        const lichHenArray = (res.data || []).filter(lich => lich.LoaiLich === 1);        
+        lichHenData.value = lichHenArray.map(lich => ({
+            id: lich.id,
+            date: lich.ThoiGianGap ? new Date(lich.ThoiGianGap).toISOString().split('T')[0] : '',
+            time: lich.ThoiGianGap ? new Date(lich.ThoiGianGap).toTimeString().slice(0, 5) : '',
+            location: lich.DiaDiem || '',
+            status: lich.TrangThai || ''
+        }));
+        
+        console.log(lichHenData.value);
+        gvhd.value = await axios.post("/teacher-by-magv/" + studenta.Giang_vien_huong_dan).then(res => res.data);
+    } catch (e) {
+        console.error(e);
+    }
+}
+
+async function fetchLichHenPhanBien() {
+    try {
+        const studenta = await axios.get(`/students/${props.mssv}`).then(res => res.data)
+        const res = await axios.get("/lich-hen/" + studenta.de_tai.MaGVPB);
+        const lichHenArray = (res.data || []).filter(lich => lich.LoaiLich === 2);        
+        lichHenData.value = lichHenArray.map(lich => ({
+            id: lich.id,
+            date: lich.ThoiGianGap ? new Date(lich.ThoiGianGap).toISOString().split('T')[0] : '',
+            time: lich.ThoiGianGap ? new Date(lich.ThoiGianGap).toTimeString().slice(0, 5) : '',
+            location: lich.DiaDiem || '',
+            status: lich.TrangThai || ''
+        }));
+        gvpb.value = await axios.post("/teacher-by-magv/" + studenta.de_tai.MaGVPB).then(res => res.data)
+    } catch (e) {
+        console.error(e);
+    }
+}
 
 async function fetchTopics(user) {
   isLoading.value = true
@@ -136,6 +183,12 @@ async function fetchTopics(user) {
 watch(currentView, (newView) => {
   if (newView === 'score50' && !evaluation.value && props.mssv) {
     fetchEvaluation()
+  }
+  if (newView === 'reviewSchedule' && !review.value && props.mssv) {
+    fetchLichHenPhanBien()
+  }
+  if (newView === 'meetingSchedule' && !review.value && props.mssv) {
+    fetchLichHenHuongDan()
   }
   if (newView === 'reviewLecturer' && !review.value && props.mssv) {
     fetchReview()

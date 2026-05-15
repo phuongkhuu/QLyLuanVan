@@ -18,7 +18,7 @@
             <div
                 class="px-5 py-3 rounded-2xl bg-blue-100 text-blue-700 font-semibold shadow-sm"
             >
-                Sắp diễn ra
+                {{ reviewSchedules.status === 'Đã xác nhận' ? 'Đã diễn ra' : 'Sắp diễn ra' }}
             </div>
         </div>
 
@@ -32,37 +32,14 @@
 import ReviewerInfo from '../components/ReviewSchedule/ReviewerInfo.vue';
 import ReviewScheduleTable from '../components/ReviewSchedule/ReviewScheduleTable.vue';
 
-const reviewer = {
-    name: "Nguyễn Thị Mai",
-    email: "nguyenthimai@university.edu.vn",
-    phone: "0987654321",
-    department: "Công nghệ thông tin",
-};
-
-const reviewSchedules = [
-    {
-        room: "B2-305",
-        date: "25/05/2026",
-        day: "Thứ Hai",
-        time: "08:00 - 09:00",
-        note: "Chuẩn bị slide báo cáo, tài liệu minh chứng và bản in luận văn.",
-        status: "Sắp diễn ra",
+const props = defineProps({
+    reviewer: {
+        type: Object,
+        required: true
     },
-    {
-        room: "B1-201",
-        date: "20/05/2026",
-        day: "Thứ Tư",
-        time: "14:00 - 15:00",
-        note: "Lịch cũ đã bị huỷ do thay đổi phòng phản biện.",
-        status: "Đã huỷ",
-    },
-    {
-        room: "Google Meet",
-        date: "04/05/2026",
-        day: "Thứ Hai",
-        time: "19:30 - 20:00",
-        note: "Kiểm tra kết nối và gửi trước file trình bày cho giảng viên phản biện.",
-        status: "Đã diễn ra",
-    },
-];
+    reviewSchedules: {
+        type: Array,
+        required: true
+    }
+});
 </script>

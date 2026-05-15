@@ -29,17 +29,15 @@
                         >
                             Giảng viên
                         </th>
-
-                        <th
-                            class="px-6 py-4 text-center text-sm font-bold text-slate-700"
-                        >
-                            Số lượng
-                        </th>
-
                         <th
                             class="px-6 py-4 text-center text-sm font-bold text-slate-700"
                         >
                             Trạng thái
+                        </th>
+                        <th
+                            class="px-6 py-4 text-center text-sm font-bold text-slate-700"
+                        >
+                            Tải file nhiệm vụ ban đầu
                         </th>
                     </tr>
                 </thead>
@@ -105,7 +103,7 @@
                                 <p
                                     class="text-sm text-slate-500 mt-1"
                                 >
-                                    Graduation Thesis
+                                    Luận văn tốt nghiệp 
                                 </p>
                             </div>
                         </td>
@@ -132,17 +130,6 @@
                             </div>
                         </td>
 
-                        <!-- Limit -->
-                        <td
-                            class="px-6 py-5 text-center"
-                        >
-                            <div
-                                class="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-slate-100 font-bold text-slate-700"
-                            >
-                                {{ topic.limit }}
-                            </div>
-                        </td>
-
                         <!-- Status -->
                         <td
                             class="px-6 py-5 text-center"
@@ -162,6 +149,16 @@
                                 {{ topic.status }}
                             </div>
                         </td>
+                        <td
+                            class="px-6 py-5 text-center"
+                        >
+                            <button
+                                @click="downloadTemplate(topic.code)"
+                                class="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-blue-100 text-blue-700 font-semibold text-sm"
+                            >
+                                Tải về
+                            </button>
+                        </td>
                     </tr>
                 </tbody>
             </table>
@@ -176,4 +173,33 @@ defineProps({
         default: () => [],
     },
 })
+async function downloadTemplate(MaDT) {
+    const res = await axios.get(`/nhiem-vu-template/${MaDT}`, {
+        responseType: "blob",
+    });
+
+    const url = window.URL.createObjectURL(new Blob([res.data]));
+
+    let filename = "download.docx";
+    const disposition = res.headers["content-disposition"];
+    if (disposition && disposition.indexOf("filename=") !== -1) {
+        const match = disposition.match(/filename\*=UTF-8''(.+)$/);
+        if (match && match[1]) {
+            filename = decodeURIComponent(match[1]);
+        } else {
+            const match2 = disposition.match(/filename="(.+)"/);
+            if (match2 && match2[1]) {
+                filename = match2[1];
+            }
+        }
+    }
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+}
 </script>

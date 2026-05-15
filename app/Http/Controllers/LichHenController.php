@@ -28,6 +28,24 @@ class LichHenController extends Controller
         return response()->json($lichHen);
     }
 
+    public function show(Request $request, $MaGV): JsonResponse
+    {
+        $lich = LichHenSV::with(['sinhvien', 'detai'])->where('MaGV', $MaGV)->orderBy('ThoiGianGap', 'desc')
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'id'          => $item->id,
+                    'ThoiGianGap' => $item->ThoiGianGap,
+                    'LoaiLich'    => $item->LoaiLich,
+                    'DiaDiem'     => $item->DiaDiem,
+                    'TrangThai'   => $item->TrangThai,
+                    'GhiChu'      => $item->GhiChu,
+                ];
+            });;
+
+        return response()->json($lich);
+    }
+
     /**
      * Tạo lịch hẹn mới.
      */
