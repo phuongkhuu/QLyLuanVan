@@ -5,6 +5,7 @@ namespace App\Providers;
 use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Eloquent\Relations\Relation;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -23,5 +24,10 @@ class AppServiceProvider extends ServiceProvider
     {
         Vite::prefetch(concurrency: 3);
         Schema::defaultStringLength(191);
+        Relation::enforceMorphMap([
+            'SinhVien'  => \App\Models\SinhVien::class,
+            'GiangVien' => \App\Models\GiangVien::class,
+        ]);
+
     }
 }

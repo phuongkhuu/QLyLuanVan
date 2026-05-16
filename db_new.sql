@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: May 14, 2026 at 08:51 PM
+-- Generation Time: May 16, 2026 at 10:32 AM
 -- Server version: 9.1.0
 -- PHP Version: 8.3.14
 
@@ -34,6 +34,14 @@ CREATE TABLE IF NOT EXISTS `cache` (
   `expiration` int NOT NULL,
   PRIMARY KEY (`key`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `cache`
+--
+
+INSERT INTO `cache` (`key`, `value`, `expiration`) VALUES
+('laravel-cache-illuminate:queue:restart', 'i:1778924132;', 2094284132),
+('laravel-cache-laravel:reverb:restart', 'i:1778924134;', 2094284134);
 
 -- --------------------------------------------------------
 
@@ -294,7 +302,7 @@ INSERT INTO `detai` (`MaDT`, `TenDeTai`, `TrangThai`, `MaGV`, `MaGVPB`, `MoTa`, 
 ('DT69DF', ' ', 'Được tiếp tục', 'GV75D', NULL, NULL, NULL, '2026-05-13 22:14:20', '2026-05-13 22:14:20'),
 ('DT6A19', ' ', 'Được tiếp tục', 'GV7E7', NULL, NULL, NULL, '2026-05-13 22:14:20', '2026-05-13 22:14:20'),
 ('DT6A7D', ' ', 'Được tiếp tục', 'GVE05', NULL, NULL, NULL, '2026-05-13 22:14:21', '2026-05-13 22:14:21'),
-('DT6B99', ' ', 'Được tiếp tục', 'GVFBF', NULL, NULL, NULL, '2026-05-13 22:14:20', '2026-05-13 22:14:20'),
+('DT6B99', ' ', 'Được tiếp tục', 'GVFBF', 'GV510', NULL, NULL, '2026-05-13 22:14:20', '2026-05-14 20:56:56'),
 ('DT6CD2', ' ', 'Được tiếp tục', 'GVE87', NULL, NULL, NULL, '2026-05-13 22:14:21', '2026-05-13 22:14:21'),
 ('DT6D10', ' ', 'Được tiếp tục', 'GVADD', NULL, NULL, NULL, '2026-05-13 22:14:21', '2026-05-13 22:14:21'),
 ('DT6D74', ' ', 'Được tiếp tục', 'GV906', NULL, NULL, NULL, '2026-05-13 22:14:20', '2026-05-13 22:14:20'),
@@ -568,9 +576,9 @@ INSERT INTO `detai` (`MaDT`, `TenDeTai`, `TrangThai`, `MaGV`, `MaGVPB`, `MoTa`, 
 ('DTFC4B', ' ', 'Được tiếp tục', 'GV7E2', NULL, NULL, NULL, '2026-05-13 22:14:20', '2026-05-13 22:14:20'),
 ('DTFD31', ' ', 'Được tiếp tục', 'GV5BE', NULL, NULL, NULL, '2026-05-13 22:14:20', '2026-05-13 22:14:20'),
 ('DTFD89', ' ', 'Được tiếp tục', 'GV3CF', NULL, NULL, NULL, '2026-05-13 22:14:20', '2026-05-13 22:14:20'),
-('DTFDD9', ' ', 'Được tiếp tục', 'GVA27', NULL, NULL, NULL, '2026-05-13 22:14:20', '2026-05-13 22:14:20'),
-('DTFE0D', ' ', 'Được tiếp tục', 'GV43D', NULL, NULL, NULL, '2026-05-13 22:14:20', '2026-05-13 22:14:20');
+('DTFDD9', ' ', 'Được tiếp tục', 'GVA27', NULL, NULL, NULL, '2026-05-13 22:14:20', '2026-05-13 22:14:20');
 INSERT INTO `detai` (`MaDT`, `TenDeTai`, `TrangThai`, `MaGV`, `MaGVPB`, `MoTa`, `MaHD`, `created_at`, `updated_at`) VALUES
+('DTFE0D', ' ', 'Được tiếp tục', 'GV43D', NULL, NULL, NULL, '2026-05-13 22:14:20', '2026-05-13 22:14:20'),
 ('DTFE69', ' ', 'Được tiếp tục', 'GVE05', NULL, NULL, NULL, '2026-05-13 22:14:21', '2026-05-13 22:14:21'),
 ('DTFF52', ' ', 'Được tiếp tục', 'GV75D', NULL, NULL, NULL, '2026-05-13 22:14:20', '2026-05-13 22:14:20'),
 ('DTFFAB', ' ', 'Được tiếp tục', 'GV8EF', NULL, NULL, NULL, '2026-05-13 22:14:20', '2026-05-13 22:14:20');
@@ -761,27 +769,97 @@ INSERT INTO `hoi_dong` (`MaHD`, `ngay_bat_dau`, `ngay_ket_thuc`, `created_at`, `
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `jobs`
+--
+
+DROP TABLE IF EXISTS `jobs`;
+CREATE TABLE IF NOT EXISTS `jobs` (
+  `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT,
+  `queue` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `payload` longtext COLLATE utf8mb4_unicode_ci NOT NULL,
+  `attempts` tinyint UNSIGNED NOT NULL,
+  `reserved_at` int UNSIGNED DEFAULT NULL,
+  `available_at` int UNSIGNED NOT NULL,
+  `created_at` int UNSIGNED NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `jobs_queue_index` (`queue`)
+) ENGINE=InnoDB AUTO_INCREMENT=32 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `lichhensv`
 --
 
 DROP TABLE IF EXISTS `lichhensv`;
 CREATE TABLE IF NOT EXISTS `lichhensv` (
   `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT,
-  `MSSV` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `MaDT` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `MaGV` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `MaGV` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
   `ThoiGianGap` datetime NOT NULL,
-  `DiaDiem` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `TrangThai` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Chờ xác nhận',
-  `LoaiLich` tinyint NOT NULL DEFAULT '1' COMMENT '1: Lịch Hướng dẫn, 2: Lịch Phản biện',
-  `GhiChu` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `DiaDiem` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `TrangThai` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Chờ xác nhận',
+  `LoaiLich` tinyint NOT NULL COMMENT '1: Lịch Hướng dẫn, 2: Lịch Phản biện',
+  `GhiChu` text COLLATE utf8mb4_unicode_ci,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
-  KEY `lichhensv_mssv_foreign` (`MSSV`),
-  KEY `lichhensv_madt_foreign` (`MaDT`),
   KEY `lichhensv_magv_foreign` (`MaGV`)
-) ENGINE=MyISAM AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `messages`
+--
+
+DROP TABLE IF EXISTS `messages`;
+CREATE TABLE IF NOT EXISTS `messages` (
+  `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT,
+  `sender_id` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `sender_type` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `receiver_id` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `receiver_type` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `body` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `read_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `messages_sender_id_sender_type_index` (`sender_id`,`sender_type`),
+  KEY `messages_receiver_id_receiver_type_index` (`receiver_id`,`receiver_type`)
+) ENGINE=InnoDB AUTO_INCREMENT=32 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `messages`
+--
+
+INSERT INTO `messages` (`id`, `sender_id`, `sender_type`, `receiver_id`, `receiver_type`, `body`, `read_at`, `created_at`, `updated_at`) VALUES
+(5, 'DH52201475', 'SinhVien', 'GVFBF', 'GiangVien', '1', NULL, '2026-05-15 23:29:19', '2026-05-15 23:29:19'),
+(6, 'DH52201475', 'SinhVien', 'GVFBF', 'GiangVien', '12', NULL, '2026-05-15 23:52:04', '2026-05-15 23:52:04'),
+(7, 'DH52201475', 'SinhVien', 'GVFBF', 'GiangVien', '123', NULL, '2026-05-15 23:57:28', '2026-05-15 23:57:28'),
+(8, 'GVFBF', 'GiangVien', 'DH52201475', 'SinhVien', 'a', NULL, '2026-05-16 00:05:34', '2026-05-16 00:05:34'),
+(9, 'DH52201475', 'SinhVien', 'GVFBF', 'GiangVien', 'a', NULL, '2026-05-16 00:13:50', '2026-05-16 00:13:50'),
+(10, 'DH52201475', 'SinhVien', 'GVFBF', 'GiangVien', '124', NULL, '2026-05-16 00:41:48', '2026-05-16 00:41:48'),
+(11, 'GVFBF', 'GiangVien', 'DH52201475', 'SinhVien', 'b', NULL, '2026-05-16 00:41:58', '2026-05-16 00:41:58'),
+(12, 'DH52201475', 'SinhVien', 'GVFBF', 'GiangVien', 'Alo', NULL, '2026-05-16 00:42:57', '2026-05-16 00:42:57'),
+(13, 'DH52201475', 'SinhVien', 'GVFBF', 'GiangVien', '123', NULL, '2026-05-16 00:46:06', '2026-05-16 00:46:06'),
+(14, 'GVFBF', 'GiangVien', 'DH52201475', 'SinhVien', '1', NULL, '2026-05-16 00:48:35', '2026-05-16 00:48:35'),
+(15, 'DH52201475', 'SinhVien', 'GVFBF', 'GiangVien', '1', NULL, '2026-05-16 00:49:07', '2026-05-16 00:49:07'),
+(16, 'DH52201475', 'SinhVien', 'GVFBF', 'GiangVien', '123', NULL, '2026-05-16 00:49:18', '2026-05-16 00:49:18'),
+(17, 'DH52201475', 'SinhVien', 'GVFBF', 'GiangVien', 'aaaa', NULL, '2026-05-16 00:52:52', '2026-05-16 00:52:52'),
+(18, 'GVFBF', 'GiangVien', 'DH52201475', 'SinhVien', '1234', NULL, '2026-05-16 01:06:54', '2026-05-16 01:06:54'),
+(19, 'DH52201475', 'SinhVien', 'GVFBF', 'GiangVien', '124', NULL, '2026-05-16 01:07:00', '2026-05-16 01:07:00'),
+(20, 'DH52201475', 'SinhVien', 'GVFBF', 'GiangVien', 'k', NULL, '2026-05-16 01:30:18', '2026-05-16 01:30:18'),
+(21, 'DH52201475', 'SinhVien', 'GVFBF', 'GiangVien', '12345', NULL, '2026-05-16 09:22:58', '2026-05-16 09:22:58'),
+(22, 'DH52201475', 'SinhVien', 'GVFBF', 'GiangVien', 'abc', NULL, '2026-05-16 09:41:19', '2026-05-16 09:41:19'),
+(23, 'GVFBF', 'GiangVien', 'DH52201475', 'SinhVien', 'Alo', NULL, '2026-05-16 09:42:17', '2026-05-16 09:42:17'),
+(24, 'GVFBF', 'GiangVien', 'DH52201475', 'SinhVien', '123', NULL, '2026-05-16 09:42:32', '2026-05-16 09:42:32'),
+(25, 'DH52201475', 'SinhVien', 'GVFBF', 'GiangVien', '1243', NULL, '2026-05-16 09:42:47', '2026-05-16 09:42:47'),
+(26, 'DH52201475', 'SinhVien', 'GVFBF', 'GiangVien', '11111', NULL, '2026-05-16 09:42:58', '2026-05-16 09:42:58'),
+(27, 'GVFBF', 'GiangVien', 'DH52201475', 'SinhVien', 'aaa', NULL, '2026-05-16 09:52:04', '2026-05-16 09:52:04'),
+(28, 'DH52201475', 'SinhVien', 'GVFBF', 'GiangVien', '123', NULL, '2026-05-16 09:52:09', '2026-05-16 09:52:09'),
+(29, 'DH52201475', 'SinhVien', 'GVFBF', 'GiangVien', 'Dạ em chào thầy ạ', NULL, '2026-05-16 09:54:37', '2026-05-16 09:54:37'),
+(30, 'GVFBF', 'GiangVien', 'DH52201475', 'SinhVien', 'Có chuyện gì không em?', NULL, '2026-05-16 09:55:16', '2026-05-16 09:55:16'),
+(31, 'DH52201475', 'SinhVien', 'GVFBF', 'GiangVien', 'Dạ em muốn hỏi thầy khi nào báo cáo á thầy', NULL, '2026-05-16 09:55:31', '2026-05-16 09:55:31');
 
 -- --------------------------------------------------------
 
@@ -795,7 +873,7 @@ CREATE TABLE IF NOT EXISTS `migrations` (
   `migration` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
   `batch` int NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=28 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=31 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Dumping data for table `migrations`
@@ -828,7 +906,10 @@ INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES
 (24, '2025_12_26_055742_add_mota_to_detai_table', 4),
 (25, '2025_12_26_055909_change_trangthai_type_in_detai_table', 5),
 (26, '2025_12_26_060050_add_diem_to_sinhvien_table', 6),
-(27, '2025_12_26_060207_add_ghichu_to_sinhvien_table', 7);
+(27, '2025_12_26_060207_add_ghichu_to_sinhvien_table', 7),
+(28, '2026_05_12_190107_create_lichhensv_table', 8),
+(29, '2026_05_16_051555_create_messages_table', 8),
+(30, '2026_05_16_052651_create_jobs_table', 9);
 
 -- --------------------------------------------------------
 
@@ -854,14 +935,8 @@ CREATE TABLE IF NOT EXISTS `sessions` (
 --
 
 INSERT INTO `sessions` (`id`, `user_id`, `ip_address`, `user_agent`, `payload`, `last_activity`) VALUES
-('BDXCIUBCwQDjAZvfES6NlsLj96vfjAQ85j14tPFP', 10, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoiN2x6Y0VwQVB0Q1JxUVhoTWl4VndzSXZ6SHluaHI4ejZYdVU4WWhmVyI7czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo1MDoibG9naW5fd2ViXzU5YmEzNmFkZGMyYjJmOTQwMTU4MGYwMTRjN2Y1OGVhNGUzMDk4OWQiO2k6MTA7fQ==', 1778791855),
-('g6mOZefDnOWvz5LdOQHe6gowsJ4KwfNbzxUIY1CD', NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoiUk82SFhKMHQ3SzhOQUZTVm5zdXRGaUIzQ3JGQmNHekVEaWRXdmJsZCI7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6Mjc6Imh0dHA6Ly9sb2NhbGhvc3Q6ODAwMC9sb2dpbiI7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fX0=', 1778661338),
-('GIfCMPR9GfjzdP22BQ4XXS4dXaWHiFve0Co5sKrk', NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Code/1.120.0 Chrome/142.0.7444.265 Electron/39.8.8 Safari/537.36', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoiNnJsb1NhdEp5VnA1Y1lSMjMwQVRNekpXZHNmVWE2aVd1a0JRcW5vTiI7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6MjE6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMCI7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fX0=', 1778790821),
-('oahxUdnWkcqcjW4bzIZBq7leolCM9MyZgwDsxSRa', NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoiRDhiNUdqcFVoRTM1QlpQVnJzRUZRWFZpRjVjeDN4M2lEN2FQbmdGVyI7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6Mjc6Imh0dHA6Ly9sb2NhbGhvc3Q6ODAwMC9sb2dpbiI7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fX0=', 1778661340),
-('puOYmvaiM1LholTo0Fq0ZydicBWpvSprpQKLkfU1', 10, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiWkd0eHNSMmZxV1RzY24zRWhoUWR1NVJhUm81SGZUeUxjS3ZmNWQyRyI7czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo1MDoibG9naW5fd2ViXzU5YmEzNmFkZGMyYjJmOTQwMTU4MGYwMTRjN2Y1OGVhNGUzMDk4OWQiO2k6MTA7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6MzE6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMC9kYXNoYm9hcmQiO319', 1778602430),
-('tRViJuC4Q9wGWgu5sOkJM40XjcARqCbSzovTdv5r', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoicVJOQllRVVFuSVJ0SWN3N2hXd2ZTd01sMDRGWWplRndNV1hQS3JtZSI7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6MzE6Imh0dHA6Ly9sb2NhbGhvc3Q6ODAwMC9kYXNoYm9hcmQiO31zOjY6Il9mbGFzaCI7YToyOntzOjM6Im9sZCI7YTowOnt9czozOiJuZXciO2E6MDp7fX1zOjUwOiJsb2dpbl93ZWJfNTliYTM2YWRkYzJiMmY5NDAxNTgwZjAxNGM3ZjU4ZWE0ZTMwOTg5ZCI7aToxO30=', 1778710853),
-('VS1Hxxfx2cy8sVNqYk1VUIbhQpZStOP57t6GrbFr', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiZXhINzRmdWQ4Nzg5ZjdXcnNVOHZJbnhFS2dYWDl0SnhxWWd6NHZhVyI7czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo1MDoibG9naW5fd2ViXzU5YmEzNmFkZGMyYjJmOTQwMTU4MGYwMTRjN2Y1OGVhNGUzMDk4OWQiO2k6MTtzOjk6Il9wcmV2aW91cyI7YToxOntzOjM6InVybCI7czozMToiaHR0cDovL2xvY2FsaG9zdDo4MDAwL2Rhc2hib2FyZCI7fX0=', 1778665757),
-('zFTkAYLuJF0BsBiK0Aym72on6HGBr2a2Lf7nKseR', NULL, '127.0.0.1', 'PostmanRuntime/7.39.1', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoic2k2c0tFQXprVGM4bGFKcXI2TmhpdlJpQjF3bTlqRWlUYk5yZFhndyI7czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6NDE6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMC9zaW5odmllbi9ESDUyMjAxMjc1Ijt9fQ==', 1778664123);
+('avDF2Kr7h6sHodOaW7rzlY3yTTjdYxbEgthQ8SDe', 61, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', 'YTo1OntzOjY6Il90b2tlbiI7czo0MDoiT3hpS1RmMDFEc1NMWGtNMlhuelJHaElndEw1MEV6aWVsVTlab3J2NyI7czozOiJ1cmwiO2E6MDp7fXM6OToiX3ByZXZpb3VzIjthOjE6e3M6MzoidXJsIjtzOjMxOiJodHRwOi8vbG9jYWxob3N0OjgwMDAvZGFzaGJvYXJkIjt9czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo1MDoibG9naW5fd2ViXzU5YmEzNmFkZGMyYjJmOTQwMTU4MGYwMTRjN2Y1OGVhNGUzMDk4OWQiO2k6NjE7fQ==', 1778925587),
+('wFoBO6iGWhj2Wb4prg2vSubpGulit9HqsGmdPcNw', 510, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', 'YTo1OntzOjY6Il90b2tlbiI7czo0MDoiQ040YVRxalJ3SDFsc0N5bDhwam5zd0ZqczI2aWN3ZDFpeDlaUGdneCI7czozOiJ1cmwiO2E6MDp7fXM6OToiX3ByZXZpb3VzIjthOjE6e3M6MzoidXJsIjtzOjMxOiJodHRwOi8vbG9jYWxob3N0OjgwMDAvZGFzaGJvYXJkIjt9czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo1MDoibG9naW5fd2ViXzU5YmEzNmFkZGMyYjJmOTQwMTU4MGYwMTRjN2Y1OGVhNGUzMDk4OWQiO2k6NTEwO30=', 1778925331);
 
 -- --------------------------------------------------------
 
@@ -2118,7 +2193,7 @@ CREATE TABLE IF NOT EXISTS `users` (
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `users_email_unique` (`email`)
-) ENGINE=InnoDB AUTO_INCREMENT=621 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=622 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Dumping data for table `users`
@@ -2744,7 +2819,8 @@ INSERT INTO `users` (`id`, `name`, `email`, `email_verified_at`, `password`, `ro
 (617, 'Phan Hữu Phúc', 'dh522o1253@student.stu.edu.vn', NULL, '$2y$12$2XgfWVVHBsNlTK7JjacWcObxyIMz/DQort5uj.3VkTmV2O0PP6n6C', 'SinhVien', NULL, '2026-05-14 20:48:39', '2026-05-14 20:48:39'),
 (618, 'Trần Quang Khang', 'lt52400015@student.stu.edu.vn', NULL, '$2y$12$vY2EkpPtGXLIH4Nog5Spsu844ud6o7pd6r9bINgRHW9MRU4flpMGu', 'SinhVien', NULL, '2026-05-14 20:48:39', '2026-05-14 20:48:39'),
 (619, 'Lý Cẩm Nhi', 'lt52400032@student.stu.edu.vn', NULL, '$2y$12$ISl23URkut6A47hcoWMsL.yav3U0kWJoHeH3hkUtHYEg9P35BZ7qa', 'SinhVien', NULL, '2026-05-14 20:48:39', '2026-05-14 20:48:39'),
-(620, 'Nguyễn Lâm Chí Vinh', 'sh52201757@student.stu.edu.vn', NULL, '$2y$12$qaY0.WG3fz2uBmz.wMxfOuSveaB84X0e9DUMo4BxDgMaZNV8O8tEe', 'SinhVien', NULL, '2026-05-14 20:48:39', '2026-05-14 20:48:39');
+(620, 'Nguyễn Lâm Chí Vinh', 'sh52201757@student.stu.edu.vn', NULL, '$2y$12$qaY0.WG3fz2uBmz.wMxfOuSveaB84X0e9DUMo4BxDgMaZNV8O8tEe', 'SinhVien', NULL, '2026-05-14 20:48:39', '2026-05-14 20:48:39'),
+(621, 'Thư ký', 'assistant@test.com', NULL, '$2y$12$jTc37S9eLGSlrChW3RMgCOQ0aBTaDwfG2orc0RrciJFVMojfhKLFG', 'ThuKy', NULL, '2026-05-15 11:26:12', '2026-05-15 11:26:12');
 
 --
 -- Constraints for dumped tables
@@ -2769,6 +2845,12 @@ ALTER TABLE `detai`
 --
 ALTER TABLE `giangvien`
   ADD CONSTRAINT `giangvien_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `lichhensv`
+--
+ALTER TABLE `lichhensv`
+  ADD CONSTRAINT `lichhensv_magv_foreign` FOREIGN KEY (`MaGV`) REFERENCES `giangvien` (`MaGV`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `sinhvien`

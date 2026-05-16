@@ -42,4 +42,10 @@ const props = defineProps({
         required: true
     }
 });
+
+import { watch } from 'vue';
+
+watch(() => props.reviewer, (newVal) => {
+  console.log('Reviewer updated:', newVal);
+}, { immediate: true, deep: true });
 </script>

@@ -1,7 +1,7 @@
 ﻿<template>
   <div class="min-h-screen bg-gray-100 flex flex-col">
     <!-- Header -->
-    <Header :user="user" />
+    <Header :user="headerUser" />
 
     <!-- Content -->
     <div class="flex flex-1">
@@ -62,7 +62,7 @@
 </template>
 
 <script setup>
-import { ref, watch } from "vue"
+import { ref, watch, computed } from "vue"
 import axios from "axios"
 
 import Header from "./components/Header.vue"
@@ -95,6 +95,8 @@ const loadingDefense = ref(false)
 const lichHenData = ref([]);
 const gvpb = ref(null);
 const gvhd = ref(null);
+const studenta = ref(null)      
+const guideTeacher = ref(null) 
 
 // Fetch topics based on the current user (your existing code)
 watch(
@@ -119,8 +121,6 @@ async function fetchLichHenHuongDan() {
             location: lich.DiaDiem || '',
             status: lich.TrangThai || ''
         }));
-        
-        console.log(lichHenData.value);
         gvhd.value = await axios.post("/teacher-by-magv/" + studenta.Giang_vien_huong_dan).then(res => res.data);
     } catch (e) {
         console.error(e);
@@ -140,6 +140,7 @@ async function fetchLichHenPhanBien() {
             status: lich.TrangThai || ''
         }));
         gvpb.value = await axios.post("/teacher-by-magv/" + studenta.de_tai.MaGVPB).then(res => res.data)
+        console.log("GV phản biện:", gvpb.value)
     } catch (e) {
         console.error(e);
     }
@@ -149,11 +150,13 @@ async function fetchTopics(user) {
   isLoading.value = true
   try {
     if (user.role === "SinhVien" && props.mssv) {
-      const studenta = await axios.get(`/students/${props.mssv}`).then(res => res.data)
+      const studentb = await axios.get(`/students/${props.mssv}`).then(res => res.data)
+      studenta.value = studentb  // save for later use
       if (studenta) {
-        const groupStr = studenta.Nhom
+        const groupStr = studentb.Nhom
         const groupNumber = groupStr ? parseInt(groupStr.split('-')[1]) : 0
-        const teacherName = await axios.post(`/teacher-by-magv/${studenta.Giang_vien_huong_dan}`)
+        const teacherName = await axios.post(`/teacher-by-magv/${studentb.Giang_vien_huong_dan}`)
+        guideTeacher.value = teacherName.data   // save the full teacher object
         const topic = await axios.get(`/topic-by-student/${props.mssv}`).then(res => res.data)
         topics.value = [
           {
@@ -372,6 +375,26 @@ async function fetchDefenseCommittee() {
     loadingDefense.value = false
   }
 }
+
+
+//Real-time chat
+const headerUser = computed(() => {
+  const base = { ...props.user }
+
+  if (studenta.value) {
+    base.sinh_vien = {
+      MSSV: studenta.value.MSSV,
+      Ho_va_Ten: studenta.value.Ho_va_Ten,
+      Giang_vien_huong_dan: studenta.value.Giang_vien_huong_dan,
+      giang_vien_huong_dan: guideTeacher.value ? {
+        MaGV: guideTeacher.value.MaGV,
+        Ho_va_Ten: guideTeacher.value.Ho_va_Ten,
+      } : null,
+    }
+  }
+
+  return base
+})
 
 function setCurrentView(view) {
   currentView.value = view

@@ -1,7 +1,7 @@
 ﻿<template>
     <div class="min-h-screen bg-gray-50 font-vietnamese text-gray-800">
         <!-- Header -->
-        <HeaderGV :user="user" />
+        <HeaderGV :user="headerUser" />
 
         <!-- Body -->
         <div class="flex h-[calc(100vh-4rem)]">
@@ -792,6 +792,8 @@ const studentsReviewer = ref([]);
 const topics = ref([]);
 const topicsReview = ref([]);
 const lichHenData = ref([]);
+const teacherMaGV = ref(null);
+const rawGuideStudents = ref([]);
 
 // Hover theo đề tài cho bảng điểm phản biện
 const hoveredTopicKey = ref(null);
@@ -838,12 +840,16 @@ const fetchStudents = async () => {
         );
 
         const MaGV = teacherRes.data?.MaGV;
+        teacherMaGV.value = MaGV;
         if (!MaGV) return;
 
         const [resTeacher, resReviewer] = await Promise.all([
             axios.post("/students-by-teacher/" + MaGV),
             axios.post("/students-by-reviewer/" + MaGV),
         ]);
+
+        rawGuideStudents.value = resTeacher.data || [];
+        console.log(rawGuideStudents.value[0])
 
         const guideStudents = (resTeacher.data || []).map((s) =>
             normalizeStudent(s, "guide"),
@@ -1765,4 +1771,14 @@ function updateNote(student) {
         });
     fetchStudents();
 }
+
+const headerUser = computed(() => ({
+  ...props.user,
+  giang_vien: teacherMaGV.value
+    ? {
+        MaGV: teacherMaGV.value,
+        sinh_viens: rawGuideStudents.value,   // raw list with MSSV, Ho_va_Ten, ...
+      }
+    : null,
+}))
 </script>

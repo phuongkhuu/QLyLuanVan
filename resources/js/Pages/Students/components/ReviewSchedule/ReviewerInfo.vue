@@ -1,5 +1,6 @@
 <template>
     <div
+        v-if ="reviewer && reviewer.Ho_va_Ten"
         class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 mb-8"
     >
         <div class="flex flex-col md:flex-row md:items-center gap-6">
@@ -37,6 +38,9 @@
                 </div>
             </div>
         </div>
+    </div>
+    <div v-else class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 mb-8 text-center text-gray-500">
+        Chưa có thông tin giảng viên phản biện.
     </div>
 </template>
 
