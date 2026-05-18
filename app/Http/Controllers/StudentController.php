@@ -173,14 +173,82 @@ class StudentController extends Controller
             return response()->json(['success' => true]);
         }
 
-        if ($sameGroup->count() >= 2) {
+        if ($sameGroup->count() >= 5) {
             return response()->json([
-                'error' => 'Nhóm này đã đủ 2 thành viên!'
+                'error' => 'Nhóm này đã đủ 5 thành viên!'
             ], 400);
         }
 
         $student->Nhom = $generatedGroup;
         $student->save();
+
+        return response()->json(['success' => true]);
+    }
+
+    public function updateMultipleStudentGroup(Request $request)
+    {
+        $data = $request->validate([
+            'mssvs' => 'required|array|min:1', // Nhận mảng MSSV
+            'mssvs.*' => 'exists:SinhVien,MSSV',
+            'group_number' => 'required|integer|min:1',
+        ]);
+
+        $groupNumber = $request->group_number;
+        $mssvs = $request->mssvs;
+
+        // Lấy danh sách sinh viên được chọn
+        $students = SinhVien::whereIn('MSSV', $mssvs)->get();
+
+        if ($students->isEmpty()) {
+            return response()->json(['error' => 'Không tìm thấy sinh viên'], 404);
+        }
+
+        // Lấy mã Giảng viên từ sinh viên đầu tiên (vì các sinh viên này đang hiển thị trong danh sách của GV)
+        $giangVien = $students->first()->Giang_vien_huong_dan;
+        $generatedGroup = $giangVien . '-' . $groupNumber;
+
+        // Kiểm tra số lượng thành viên hiện tại của nhóm đó trong DB
+        $currentGroupCount = SinhVien::where('Nhom', $generatedGroup)->count();
+
+        // Kiểm tra tổng số lượng: (Số lượng hiện có + Số lượng sắp thêm) có vượt quá 5 không
+        if ($currentGroupCount + count($mssvs) > 5) {
+            return response()->json([
+                'error' => 'Nhóm này chỉ được tối đa 5 thành viên. Hiện nhóm đã có ' . $currentGroupCount . ' thành viên, bạn đang cố thêm ' . count($mssvs) . ' người.'
+            ], 400);
+        }
+
+        // Cập nhật hàng loạt
+        SinhVien::whereIn('MSSV', $mssvs)->update(['Nhom' => $generatedGroup]);
+
+        return response()->json(['success' => true]);
+    }
+
+    // Thêm hàm này vào StudentController.php
+    public function updateMultipleEvaluation(Request $request)
+    {
+        $request->validate([
+            'mssvs' => 'required|array|min:1',
+            'mssvs.*' => 'exists:SinhVien,MSSV',
+            'score' => 'nullable|numeric|min:0|max:100',
+            'note' => 'nullable|string|max:255',
+        ]);
+
+        $updateData = [];
+        
+        // Kiểm tra xem người dùng có nhập Điểm không
+        if ($request->has('score') && $request->score !== null) {
+            $updateData['Diem'] = $request->score;
+        }
+        
+        // Kiểm tra xem người dùng có nhập Ghi chú không
+        if ($request->has('note') && $request->note !== null) {
+            $updateData['GhiChu'] = $request->note;
+        }
+
+        // Cập nhật Database nếu có dữ liệu truyền lên
+        if (!empty($updateData)) {
+            SinhVien::whereIn('MSSV', $request->mssvs)->update($updateData);
+        }
 
         return response()->json(['success' => true]);
     }
@@ -271,4 +339,6 @@ class StudentController extends Controller
             'sdt'    => $student->sdt,
         ];
     }
+
+
 }

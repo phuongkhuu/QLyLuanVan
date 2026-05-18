@@ -6,19 +6,57 @@
         <h1 class="text-xl font-bold tracking-wide">HỆ THỐNG QUẢN LÝ LUẬN VĂN TỐT NGHIỆP</h1>
         <p class="text-sm mt-1">KHOA CÔNG NGHỆ THÔNG TIN</p>
       </div>
-      <div class="relative">
-        <div @click="toggleMenu" class="flex items-center space-x-3 cursor-pointer">
-          <div class="w-10 h-10 bg-white text-indigo-600 font-bold rounded-full flex items-center justify-center">
-            {{ user.name ? user.name.charAt(0).toUpperCase() : '?' }}
-          </div>
-          <div class="text-right">
-            <div class="font-semibold text-sm text-white">{{ user.name }}</div>
-            <div class="text-xs opacity-80">Admin</div>
+
+      <div class="flex items-center gap-6">
+        <div class="relative">
+          <button @click="toggleNotifications" class="relative p-2 text-white hover:bg-indigo-500 rounded-full transition">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+            </svg>
+            <span v-if="$page.props.auth.notifications.length > 0" class="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-red-100 bg-red-600 rounded-full transform translate-x-1/4 -translate-y-1/4">
+              {{ $page.props.auth.notifications.length }}
+            </span>
+          </button>
+
+          <div v-if="showNotifications" class="absolute right-0 mt-2 w-80 bg-white rounded-md shadow-xl z-50 overflow-hidden border border-gray-100">
+            <div class="bg-gray-50 px-4 py-3 border-b text-gray-700 font-semibold flex justify-between items-center">
+              <span>Thông báo</span>
+              <span class="text-xs bg-indigo-100 text-indigo-800 px-2 py-1 rounded-full">{{ $page.props.auth.notifications.length }} mới</span>
+            </div>
+            <div class="max-h-64 overflow-y-auto">
+              <div v-if="$page.props.auth.notifications.length === 0" class="p-4 text-center text-sm text-gray-500">
+                Không có thông báo mới.
+              </div>
+              <div v-for="notification in $page.props.auth.notifications" :key="notification.id" 
+                   class="p-4 border-b hover:bg-gray-50 cursor-pointer flex flex-col gap-1"
+                   @click="markAsRead(notification.id)">
+                <div class="flex justify-between items-start">
+                  <span class="font-semibold text-sm text-gray-800">{{ notification.data.title }}</span>
+                  <span class="text-[10px] text-gray-400">{{ new Date(notification.created_at).toLocaleDateString('vi-VN') }}</span>
+                </div>
+                <p class="text-xs text-gray-600 leading-snug">{{ notification.data.message }}</p>
+                <div class="text-right mt-1">
+                  <span class="text-[10px] text-indigo-500 hover:text-indigo-700">Đánh dấu đã đọc</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-        <div v-if="showMenu" class="absolute right-0 top-full mt-2 w-40 bg-white text-black rounded shadow z-50">
-          <button @click="goProfile" class="w-full text-left px-4 py-2 hover:bg-gray-100">Trang cá nhân</button>
-          <button @click="logout" class="w-full text-left px-4 py-2 hover:bg-gray-100 text-red-600">Đăng xuất</button>
+
+        <div class="relative">
+          <div @click="toggleMenu" class="flex items-center space-x-3 cursor-pointer">
+            <div class="w-10 h-10 bg-white text-indigo-600 font-bold rounded-full flex items-center justify-center">
+              {{ user.name ? user.name.charAt(0).toUpperCase() : '?' }}
+            </div>
+            <div class="text-right hidden md:block">
+              <div class="font-semibold text-sm text-white">{{ user.name }}</div>
+              <div class="text-xs opacity-80">{{ user.role || 'Admin' }}</div>
+            </div>
+          </div>
+          <div v-if="showMenu" class="absolute right-0 top-full mt-2 w-40 bg-white text-black rounded shadow z-50">
+            <button @click="goProfile" class="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm">Trang cá nhân</button>
+            <button @click="logout" class="w-full text-left px-4 py-2 hover:bg-gray-100 text-red-600 text-sm">Đăng xuất</button>
+          </div>
         </div>
       </div>
     </header>
@@ -33,6 +71,14 @@
             :class="currentView === 'home' ? 'bg-indigo-100 text-indigo-900 rounded px-3 py-2' : 'text-left hover:text-indigo-900'"
           >
             Trang chủ
+          </button>
+
+
+          <button
+            @click="setCurrentView('timeAllocation')"
+            :class="currentView === 'timeAllocation' ? 'bg-indigo-100 text-indigo-900 rounded px-3 py-2' : 'text-left hover:text-indigo-900'"
+          >
+            Phân bổ thời gian
           </button>
 
           <button
@@ -91,12 +137,7 @@
             Phân công hội đồng
           </button>
 
-          <button
-            @click="setCurrentView('timeAllocation')"
-            :class="currentView === 'timeAllocation' ? 'bg-indigo-100 text-indigo-900 rounded px-3 py-2' : 'text-left hover:text-indigo-900'"
-          >
-            Phân bổ thời gian
-          </button>
+          
         </nav>
       </aside>
 
@@ -703,7 +744,19 @@
                   <th class="p-3 text-center min-w-[150px]">Họ và tên SV</th>
                   <th class="p-3 text-center min-w-[70px]">Nhóm</th>
                   <th class="p-3 text-center min-w-[260px]">Đề tài LVTN</th>
-                  <th class="p-3 text-center min-w-[200px]">Giảng viên HD</th>
+                  <!-- <th class="p-3 text-center min-w-[200px]">Giảng viên HD</th> -->
+                   <th 
+                      class="p-3 text-center min-w-[200px] cursor-pointer hover:bg-indigo-200 transition select-none group"
+                      @click="handleSort('lecturer')"
+                      title="Nhấn để sắp xếp">
+                      Giảng viên HD
+                      <span v-if="sortColumn === 'lecturer'" class="ml-1 text-xs inline-block w-3">
+                        {{ sortDirection === 'asc' ? '▲' : '▼' }}
+                      </span>
+                      <span v-else class="ml-1 text-xs text-indigo-300 inline-block w-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                        ↕
+                      </span>
+                    </th>
                   <th class="p-3 text-center min-w-[120px]">Ghi chú</th>
                   <th class="p-3 text-center min-w-[120px]">Thao tác</th>
                 </tr>
@@ -1168,47 +1221,61 @@
                 </tr>
               </thead>
               <tbody>
-                <tr v-if="committees.length === 0">
-                  <td colspan="4" class="p-4 text-center text-gray-500">
+                <tr v-if="groupedAndSortedCommittees.length === 0">
+                  <td colspan="5" class="p-4 text-center text-gray-500">
                     Chưa có hội đồng nào
                   </td>
                 </tr>
-                <tr
-                  v-for="(c, idx) in committees"
-                  :key="c.id || idx"
-                  class="hover:bg-indigo-50"
-                >
-                  <td class="p-3 text-center">{{ idx + 1 }}</td>
-                  <td class="p-3 text-center">Hội đồng {{ idx + 1 }}</td>
-                  <td class="p-3 text-center">
-                    {{ c.start ? formatDateTime(c.start) : '-' }}
-                  </td>
-                  <td class="p-3 text-center">
-                    {{ c.end ? formatDateTime(c.end) : '-' }}
-                  </td>
-                  <td class="p-3 text-center">
-                    <div class="flex items-center justify-center gap-2">
-                      <button
-                        @click="openCommitteeDetail(c)"
-                        class="bg-indigo-500 text-white px-3 py-1 rounded text-xs hover:bg-indigo-600 transition"
-                      >
-                        Chi tiết
-                      </button>
-                      <button
-                        @click="openCommitteeEditForm(c)"
-                        class="bg-blue-500 text-white px-3 py-1 rounded text-xs hover:bg-blue-600 transition"
-                      >
-                        Sửa
-                      </button>
-                      <button
-                        @click="deleteCommittee(c)"
-                        class="bg-red-500 text-white px-3 py-1 rounded text-xs hover:bg-red-600 transition"
-                      >
-                        Xóa
-                      </button>
-                    </div>
-                  </td>
-                </tr>
+                
+                <template v-for="(group, gIdx) in groupedAndSortedCommittees" :key="'group-' + gIdx">
+                  
+                  <tr class="bg-indigo-200">
+                    <td colspan="5" class="p-2 pl-4 font-bold text-indigo-900 text-left">
+                      Ngày bắt đầu: {{ group.date }}
+                    </td>
+                  </tr>
+
+                  <tr
+                    v-for="(c, cIdx) in group.committees"
+                    :key="c.id || cIdx"
+                    class="hover:bg-indigo-50"
+                  >
+                    <td class="p-3 text-center">{{ cIdx + 1 }}</td>
+                    
+                    <td class="p-3 text-center">
+                      Hội đồng {{ committeeIndexMap.has(c.id) ? committeeIndexMap.get(c.id) + 1 : (cIdx + 1) }}
+                    </td>
+                    
+                    <td class="p-3 text-center">
+                      {{ c.start ? formatDateTime(c.start) : '-' }}
+                    </td>
+                    <td class="p-3 text-center">
+                      {{ c.end ? formatDateTime(c.end) : '-' }}
+                    </td>
+                    <td class="p-3 text-center">
+                      <div class="flex items-center justify-center gap-2">
+                        <button
+                          @click="openCommitteeDetail(c)"
+                          class="bg-indigo-500 text-white px-3 py-1 rounded text-xs hover:bg-indigo-600 transition"
+                        >
+                          Chi tiết
+                        </button>
+                        <button
+                          @click="openCommitteeEditForm(c)"
+                          class="bg-blue-500 text-white px-3 py-1 rounded text-xs hover:bg-blue-600 transition"
+                        >
+                          Sửa
+                        </button>
+                        <button
+                          @click="deleteCommittee(c)"
+                          class="bg-red-500 text-white px-3 py-1 rounded text-xs hover:bg-red-600 transition"
+                        >
+                          Xóa
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                </template>
               </tbody>
             </table>
           </div>
@@ -1382,6 +1449,7 @@
         <!-- Các view khác (grading) để trống -->
         <div v-if="currentView === 'grading'"></div>
 
+
         <!-- PHÂN CÔNG HỘI ĐỒNG -->
         <div v-if="currentView === 'committeeAssignment'">
           <div class="flex justify-between items-center mb-6">
@@ -1408,8 +1476,10 @@
                 <tr>
                   <th class="p-3 text-center">MSSV</th>
                   <th class="p-3 text-center">Họ và tên SV</th>
-                  <th class="p-3 text-center">Mã đề tài</th>
+                  <th class="p-3 text-center">Điểm 50%</th>
                   <th class="p-3 text-center">Đề tài</th>
+                  <th class="p-3 text-center">Giáo viên HD</th>
+                  <th class="p-3 text-center">Giáo viên PB</th>
                   <th class="p-3 text-center">Hội đồng</th>
                   <th class="p-3 text-center">Thao tác</th>
                 </tr>
@@ -1427,19 +1497,29 @@
                       <td class="p-3 text-center">{{ stu.mssv || '-' }}</td>
                       <td class="p-3 text-center">{{ stu.name || '-' }}</td>
 
-                      <!-- Topic cell only on first student row -->
-                       <td v-if="si === 0" class="p-3 text-center" :rowspan="group.rowSpan">
-                        {{ group.MaDT || '-' }}
+                      <td class="p-3 text-center font-bold">
+                        <span v-if="stu.diem50 !== null && stu.diem50 !== ''" 
+                              :class="stu.diem50 >= 5 ? 'text-green-600' : 'text-red-600'">
+                          {{ stu.diem50 || '-' }}
+                        </span>
+                        <span v-else class="text-gray-400 italic font-normal">Chưa có</span>
                       </td>
+                      
                       <td v-if="si === 0" class="p-3 text-center" :rowspan="group.rowSpan">
                         {{ group.topic || '-' }}
+                      </td>
+
+                      <td v-if="si === 0" class="p-3 text-center" :rowspan="group.rowSpan">
+                        {{ group.gvhd || '-' }}
+                      </td>
+                      <td v-if="si === 0" class="p-3 text-center" :rowspan="group.rowSpan">
+                        {{ group.gvpb || '-' }}
                       </td>
                       <td v-if="si === 0" class="p-3 text-center" :rowspan="group.rowSpan">
                         <span v-if="group.MaHD && committeeIndexMap.has(group.MaHD)">
                          {{ getCommitteeLabel(group.MaHD) }}
                         </span>
                       </td>
-                      <!-- Actions cell only on first student row (rowspan) -->
                       <td v-if="si === 0" class="p-3" :rowspan="group.rowSpan">
                         <div class="flex gap-2 justify-center items-center h-full">
                           <button
@@ -1461,13 +1541,12 @@
                 </template>
 
                 <tr v-else>
-                  <td class="p-3 italic text-sm text-gray-500" colspan="4">Không có dữ liệu để phân công</td>
+                  <td class="p-3 italic text-sm text-gray-500" colspan="5">Không có dữ liệu để phân công</td>
                 </tr>
               </tbody>
             </table>
           </div>
 
-          <!-- Modal: danh sách hội đồng để chọn -->
           <div
             v-if="showCommitteeAssignModal"
             class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40"
@@ -1692,6 +1771,21 @@
 import { onMounted, ref, computed } from 'vue'
 import { router } from '@inertiajs/vue3'
 import axios from 'axios'
+
+const showNotifications = ref(false)
+
+function toggleNotifications() {
+  showNotifications.value = !showNotifications.value;
+  if(showNotifications.value) showMenu.value = false; // Đóng menu profile nếu đang mở
+}
+
+function markAsRead(id) {
+  router.post(`/notifications/${id}/mark-as-read`, {}, {
+    preserveScroll: true,
+    onSuccess: () => {
+    }
+  });
+}
 
 const showMenu = ref(false)
 function toggleMenu() {
@@ -2029,6 +2123,48 @@ const svpc = ref([])
 // hội đồng
 const committees = ref([])
 
+const groupedAndSortedCommittees = computed(() => {
+  if (!committees.value || committees.value.length === 0) return [];
+
+  const now = new Date().getTime();
+
+  // 1. Sắp xếp mảng phẳng theo khoảng cách thời gian gần với hiện tại nhất
+  const sorted = [...committees.value].sort((a, b) => {
+    // Chuyển đổi an toàn chuỗi ngày giờ từ Backend sang timestamp
+    const timeA = new Date((a.start || '').replace(' ', 'T')).getTime();
+    const timeB = new Date((b.start || '').replace(' ', 'T')).getTime();
+    
+    // Tính khoảng cách tuyệt đối so với thời điểm hiện tại
+    const diffA = isNaN(timeA) ? Infinity : Math.abs(timeA - now);
+    const diffB = isNaN(timeB) ? Infinity : Math.abs(timeB - now);
+    
+    return diffA - diffB;
+  });
+
+  // 2. Nhóm các hội đồng theo chuỗi ngày (bỏ qua giờ/phút)
+  const groupsMap = new Map();
+  sorted.forEach(c => {
+    // formatDateTime() trả về "DD/MM/YYYY HH:mm:ss", ta split lấy phần "DD/MM/YYYY"
+    const dateStr = c.start ? formatDateTime(c.start).split(' ')[0] : 'Chưa xác định';
+    
+    if (!groupsMap.has(dateStr)) {
+      groupsMap.set(dateStr, []);
+    }
+    groupsMap.get(dateStr).push(c);
+  });
+
+  // 3. Chuyển Map thành mảng để render ra giao diện
+  const result = [];
+  groupsMap.forEach((items, date) => {
+    result.push({
+      date: date,
+      committees: items
+    });
+  });
+
+  return result;
+});
+
 /** ========================== */
 /**  SEARCH / STATS            */
 /** ========================== */
@@ -2037,7 +2173,18 @@ const teacherSearch = ref('')
 const studentSearch = ref('')
 const topicSearch = ref('')
 const evaluationSearch = ref('');
+// Sắp xếp theo tên GV
+const sortColumn = ref('');
+const sortDirection = ref('asc');
 
+const handleSort = (column) => {
+  if (sortColumn.value === column) {
+    sortDirection.value = sortDirection.value === 'asc' ? 'desc' : 'asc';
+  } else {
+    sortColumn.value = column;
+    sortDirection.value = 'asc';
+  }
+};
 const totalStudents = ref(0)
 const totalTeachers = ref(0)
 const totalTopics = ref(0)
@@ -2061,17 +2208,37 @@ const filteredStudent = computed(() => {
 });
 
 const filteredAssignments = computed(() => {
-  if (!assignmentSearch.value) return assignments.value;
+  // 1. Lấy dữ liệu gốc
+  let result = assignments.value;
 
-  const searchTerm = assignmentSearch.value.toLowerCase();
-  return assignments.value.filter(item =>
-    item.mssv.toLowerCase().includes(searchTerm) ||
-    item.name.toLowerCase().includes(searchTerm) ||
-    (item.group && item.group.toLowerCase().includes(searchTerm)) ||
-    (item.topic && item.topic.toLowerCase().includes(searchTerm)) ||
-    (item.lecturer && item.lecturer.toLowerCase().includes(searchTerm)) ||
-    (item.note && item.note.toLowerCase().includes(searchTerm))
-  );
+  // 2. Logic Tìm kiếm (Search)
+  if (assignmentSearch.value) {
+    const searchTerm = assignmentSearch.value.toLowerCase();
+    result = result.filter(item =>
+      item.mssv.toLowerCase().includes(searchTerm) ||
+      item.name.toLowerCase().includes(searchTerm) ||
+      (item.group && item.group.toLowerCase().includes(searchTerm)) ||
+      (item.topic && item.topic.toLowerCase().includes(searchTerm)) ||
+      (item.lecturer && item.lecturer.toLowerCase().includes(searchTerm)) ||
+      (item.note && item.note.toLowerCase().includes(searchTerm))
+    );
+  }
+
+  // 3. Logic Sắp xếp (Sort)
+  if (sortColumn.value === 'lecturer') {
+    // Dùng [...result] để copy mảng, tránh báo lỗi mutate computed array của Vue
+    result = [...result].sort((a, b) => {
+      // Đảm bảo không bị lỗi nếu lecturer bị null/undefined
+      const valA = a.lecturer || '';
+      const valB = b.lecturer || '';
+      
+      // So sánh tiếng Việt chuẩn
+      let comparison = valA.localeCompare(valB, 'vi');
+      return sortDirection.value === 'asc' ? comparison : -comparison;
+    });
+  }
+
+  return result;
 });
 
 const filteredTopics = computed(() => {
@@ -2159,6 +2326,7 @@ function normalizeStudents(studentsArr) {
   return (studentsArr || []).map(s => ({
     mssv: s.mssv ?? s.MSSV ?? '',
     name: s.name ?? s.Ho_va_Ten ?? s.HoTen ?? '',
+    diem50: s.Diem ?? s.diem50 ?? null,
     MaDT: s.MaDT,
     MaHD: s.committee,
     group: s.group ?? s.Nhom ?? '',
@@ -2338,7 +2506,8 @@ const filteredCommitteeAssignRows = computed(() => {
 
     group.students.push({
       mssv: r.mssv,
-      name: r.name
+      name: r.name,
+      diem50: r.diem50
     })
 
     if (!group.MaHD && r.MaHD) {

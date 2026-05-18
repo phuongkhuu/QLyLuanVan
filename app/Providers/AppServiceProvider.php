@@ -2,10 +2,9 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Eloquent\Relations\Relation;
+// 1. Thêm dòng use này ở trên cùng
+use Illuminate\Database\Eloquent\Relations\Relation; 
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -14,7 +13,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-         //
+        //
     }
 
     /**
@@ -22,12 +21,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        Vite::prefetch(concurrency: 3);
-        Schema::defaultStringLength(191);
+        // 2. Thêm khối lệnh này vào hàm boot()
         Relation::enforceMorphMap([
-            'SinhVien'  => \App\Models\SinhVien::class,
-            'GiangVien' => \App\Models\GiangVien::class,
+            'user' => \App\Models\User::class,
+            
+            // Khai báo thêm nếu bạn có dùng GiangVien để nhận thông báo trực tiếp
+            'giangvien' => \App\Models\GiangVien::class, 
         ]);
-
     }
 }
