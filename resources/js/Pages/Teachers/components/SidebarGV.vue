@@ -1,108 +1,181 @@
 <template>
-    <aside class="w-64 bg-white border-r p-6 min-h-full">
-        <nav class="flex flex-col space-y-4 text-indigo-700 font-medium">
-            <button
-                @click="setCurrentView('dashboard')"
-                :class="
-                    currentView === 'dashboard'
-                        ? 'bg-indigo-100 text-indigo-900 rounded px-3 py-2'
-                        : 'text-left hover:text-indigo-900'
-                "
-            >
-                Trang chủ
-            </button>
+    <aside
+        :class="[
+            collapsed ? 'w-24' : 'w-72',
+            'bg-slate-50 border-r border-slate-200 h-screen sticky top-0 transition-all duration-300 flex flex-col shadow-sm'
+        ]"
+    >
+        <!-- TOP -->
+        <div
+            class="h-20 border-b border-slate-200 flex items-center justify-between px-5"
+        >
+            <!-- Logo -->
+            <transition name="fade">
+                <div
+                    v-if="!collapsed"
+                    class="flex flex-col"
+                >
+                    <h2
+                        class="text-xs font-bold text-indigo-600 tracking-wide"
+                    >
+                        {{user.name}}
+                    </h2>
 
-            <button
-                @click="setCurrentView('students')"
-                :class="
-                    currentView === 'students'
-                        ? 'bg-indigo-100 text-indigo-900 rounded px-3 py-2'
-                        : 'text-left hover:text-indigo-900'
-                "
-            >
-                Danh sách sinh viên
-            </button>
+                    <p
+                        class="text-xs text-slate-400 mt-1"
+                    >
+                        {{user.role}}
+                    </p>
+                </div>
+            </transition>
 
+            <!-- Toggle -->
             <button
-                @click="setCurrentView('assignTopic')"
-                :class="
-                    currentView === 'assignTopic'
-                        ? 'bg-indigo-100 text-indigo-900 rounded px-3 py-2'
-                        : 'text-left hover:text-indigo-900'
-                "
+                @click="collapsed = !collapsed"
+                class="w-11 h-11 rounded-2xl bg-white border border-slate-200 hover:bg-indigo-50 text-indigo-600 flex items-center justify-center shadow-sm transition-all"
             >
-                Phân công đề tài
+                ☰
             </button>
+        </div>
 
+        <!-- MENU -->
+        <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
             <button
-                @click="setCurrentView('evaluation50')"
-                :class="
-                    currentView === 'evaluation50'
-                        ? 'bg-indigo-100 text-indigo-900 rounded px-3 py-2'
-                        : 'text-left hover:text-indigo-900'
-                "
-            >
-                Đánh giá 50%
-            </button>
+                v-for="item in menus"
+                :key="item.view"
+                @click="setCurrentView(item.view)"
+                :class="[
+                    'w-full flex items-center rounded-2xl transition-all duration-200 group',
 
-            <button
-                @click="setCurrentView('reviewScore')"
-                :class="
-                    currentView === 'reviewScore'
-                        ? 'bg-indigo-100 text-indigo-900 rounded px-3 py-2'
-                        : 'text-left hover:text-indigo-900'
-                "
-            >
-                Điểm phản biện
-            </button>
+                    collapsed
+                        ? 'justify-center px-0 py-4'
+                        : 'gap-4 px-4 py-4',
 
-            <button
-                @click="setCurrentView('guideScore')"
-                :class="
-                    currentView === 'guideScore'
-                        ? 'bg-indigo-100 text-indigo-900 rounded px-3 py-2'
-                        : 'text-left hover:text-indigo-900'
-                "
+                    currentView === item.view
+                        ? 'bg-gradient-to-r from-indigo-500 to-indigo-600 text-white shadow-lg'
+                        : 'text-slate-600 hover:bg-white hover:shadow-sm'
+                ]"
             >
-                Điểm hướng dẫn
-            </button>
+                <!-- Icon -->
+                <div
+                    :class="[
+                        'w-11 h-11 rounded-xl flex items-center justify-center text-lg transition-all',
 
-            <button
-                @click="setCurrentView('AppointmentView')"
-                :class="
-                    currentView === 'AppointmentView'
-                        ? 'bg-indigo-100 text-indigo-900 rounded px-3 py-2'
-                        : 'text-left hover:text-indigo-900'
-                "
-            >
-                Lịch gặp sinh viên
+                        currentView === item.view
+                            ? 'bg-white/20 text-white'
+                            : 'bg-white border border-slate-200 text-indigo-600 group-hover:bg-indigo-50'
+                    ]"
+                >
+                    {{ item.icon }}
+                </div>
+
+                <!-- Label -->
+                <transition name="fade">
+                    <div
+                        v-if="!collapsed"
+                        class="flex flex-col items-start"
+                    >
+                        <span
+                            class="font-semibold text-sm"
+                        >
+                            {{ item.label }}
+                        </span>
+
+                        <span
+                            class="text-xs opacity-70"
+                            v-if="currentView === item.view"
+                        >
+                            Đang hoạt động
+                        </span>
+                    </div>
+                </transition>
             </button>
         </nav>
+
     </aside>
 </template>
 
-<!-- <script setup>
-import { ref } from "vue";
-import { useRouter, useRoute } from "vue-router";
-const currentView = ref("dashboard");
-
-const students = ref([]);
-const students1 = ref([]);
-const studentsReviewer = ref([]);
-const topics = ref([]);
-const topicsReview = ref([]);
-function setCurrentView(view) {
-    currentView.value = view;
-}
-</script> -->
 <script setup>
+import { ref } from "vue";
+
 defineProps({
-  currentView: String
-})
+    currentView: String,
+    user: Object,
+});
 
-const emit = defineEmits(['changeView'])
+const emit = defineEmits([
+    "changeView",
+]);
 
+const collapsed = ref(false);
+
+/*
+|--------------------------------------------------------------------------
+| Menus
+|--------------------------------------------------------------------------
+*/
+const menus = [
+    {
+        label: "Trang chủ",
+        view: "dashboard",
+        icon: "🏠",
+    },
+
+    {
+        label: "Danh sách sinh viên",
+        view: "students",
+        icon: "👨‍🎓",
+    },
+
+    {
+        label: "Phân công đề tài",
+        view: "assignTopic",
+        icon: "📚",
+    },
+
+    {
+        label: "Đánh giá 50%",
+        view: "evaluation50",
+        icon: "📝",
+    },
+
+    {
+        label: "Điểm phản biện",
+        view: "reviewScore",
+        icon: "🎯",
+    },
+
+    {
+        label: "Điểm hướng dẫn",
+        view: "guideScore",
+        icon: "📖",
+    },
+
+    {
+        label: "Lịch gặp sinh viên",
+        view: "AppointmentView",
+        icon: "📅",
+    },
+];
+
+/*
+|--------------------------------------------------------------------------
+| Change View
+|--------------------------------------------------------------------------
+*/
 function setCurrentView(view) {
-  emit('changeView', view)
+    emit("changeView", view);
 }
 </script>
+
+<style scoped>
+.fade-enter-active,
+.fade-leave-active {
+    transition: opacity 0.2s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+    opacity: 0;
+}
+</style>

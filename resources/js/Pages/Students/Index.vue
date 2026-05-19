@@ -74,6 +74,9 @@ import ReviewLecturer from "./pages/ReviewLecturer.vue"
 import DefenseCommittee from "./pages/DefenseCommittee.vue"
 import ReviewSchedule from "./pages/ReviewSchedule.vue"
 
+// Cái này lấy bên router lúc login vào thì nó có hàm controller xử lý và trả về cái biến
+// user và mssv
+// defineProps để nhận 2 biến từ cha truyền xuống
 const props = defineProps({
   user: Object,
   mssv: String,
@@ -378,6 +381,7 @@ async function fetchDefenseCommittee() {
 
 
 //Real-time chat
+// computed tương tự useMemo trong react
 const headerUser = computed(() => {
   const base = { ...props.user }
 
