@@ -251,10 +251,12 @@ const contactName = computed(
 const contactInitial = computed(() => contactName.value?.charAt(0) ?? "G")
 const contactStatus = "Đang hoạt động"
 
-// --- Chat eligibility ---
+// --- Chat eligibility  !! là ép kiểu boolean ---
 const canChat = computed(() => !!contactId.value)
 
+
 // --- Channel name ---
+// Tạo ra 1 kênh chat cho mỗi cuộc trò chuyện 
 const channelName = computed(() => {
     if (!myId.value || !contactId.value) return null
     const parts = [`SinhVien.${myId.value}`, `GiangVien.${contactId.value}`]
@@ -272,7 +274,7 @@ function toggleChat() {
     if (showChat.value) {
         messages.value = []
         loadMessages()
-        subscribeToChannel()
+        subscribeToChannel() // truy cập vào chat của mình
     } else {
         unsubscribeFromChannel()
     }

@@ -79,10 +79,18 @@ Route::post('/logout', function (Request $request) {
 Route::resource('students', StudentController::class)->middleware(['auth', 'verified']);
 Route::resource('teachers', TeacherController::class)->middleware(['auth', 'verified']);
 Route::resource('assistants', AssistantController::class)->middleware(['auth', 'verified']);
+
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::post('/notifications/{id}/mark-as-read', function (\Illuminate\Http\Request $request, $id) {
+        $notification = $request->user()->notifications()->find($id);
+        if ($notification) {
+            $notification->markAsRead();
+        }
+        return back();
+    })->name('notifications.markAsRead');
 });
 
 Route::get('/students-export', [StudentController::class, 'export'])->name('students.export');
@@ -142,6 +150,7 @@ Route::get('/topics-by-review-teacher/{MaGV}', [DeTaiController::class, 'getTopi
 
 //Route tạo nhóm, gộp nhóm
 Route::post('/update-student-group', [StudentController::class, 'updateStudentGroup']);
+Route::post('/update-multiple-student-group', [StudentController::class, 'updateMultipleStudentGroup']);
 
 //Route phân công
 Route::post('/save-topic', [DeTaiController::class, 'saveTopic']);
@@ -150,6 +159,7 @@ Route::put('/assign-reviewer/{MaDT}', [DeTaiController::class, 'assignReviewer']
 //Route cập nhật điểm và ghi chú
 Route::post('/update-score', [StudentController::class, 'updateScore']);
 Route::post('/update-note', [StudentController::class, 'updateNote']);
+Route::post('/update-multiple-evaluation', [StudentController::class, 'updateMultipleEvaluation']);
 
 //Route xuất file mẫu nhiệm vụ, phản biện, hướng dẫn
 Route::get('/nhiem-vu-template/{MaDT}', [ExportController::class, 'downloadTemplate']);
