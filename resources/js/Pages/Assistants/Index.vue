@@ -36,6 +36,13 @@
           </button>
 
           <button
+            @click="setCurrentView('timeAllocation')"
+            :class="currentView === 'timeAllocation' ? 'bg-indigo-100 text-indigo-900 rounded px-3 py-2' : 'text-left hover:text-indigo-900'"
+          >
+            Phân bổ thời gian
+          </button>
+                      
+          <button
             @click="setCurrentView('teachers')"
             :class="currentView === 'teachers' ? 'bg-indigo-100 text-indigo-900 rounded px-3 py-2' : 'text-left hover:text-indigo-900'"
           >
@@ -91,12 +98,7 @@
             Phân công hội đồng
           </button>
 
-          <button
-            @click="setCurrentView('timeAllocation')"
-            :class="currentView === 'timeAllocation' ? 'bg-indigo-100 text-indigo-900 rounded px-3 py-2' : 'text-left hover:text-indigo-900'"
-          >
-            Phân bổ thời gian
-          </button>
+          
         </nav>
       </aside>
 

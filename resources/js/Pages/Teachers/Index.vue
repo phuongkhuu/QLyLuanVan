@@ -1595,7 +1595,7 @@ const filteredGuideScoreList = computed(() => {
     const q = (assignSearch.value || '').toLowerCase().trim();
 
     // ------------------------------------------------------------------
-    // 1. Build ALL possible rows (same as your guidingScoreList logic)
+    // 1. Build ALL possible rows (same as your original logic)
     // ------------------------------------------------------------------
     const allRows = [];
 
@@ -1644,40 +1644,49 @@ const filteredGuideScoreList = computed(() => {
     }
 
     // ------------------------------------------------------------------
-    // 3. Sort by group number ascending (lowest first)
-    //    (Rows without a group go to the end)
+    // 3. GROUP by topic FIRST, then sort the groups (not the rows globally)
     // ------------------------------------------------------------------
-    filtered.sort((a, b) => {
-        const gA = parseInt(a.group) || 9999;
-        const gB = parseInt(b.group) || 9999;
-        return gA - gB;
+    // Step 3a: Group rows by topic object (or by topic code if you prefer)
+    const topicMap = new Map();
+    filtered.forEach(row => {
+        const key = row.topic; // same object reference, or use row.topic?.MaDT for ID
+        if (!topicMap.has(key)) {
+            topicMap.set(key, []);
+        }
+        topicMap.get(key).push(row);
     });
 
-    // ------------------------------------------------------------------
-    // 4. Re‑group consecutive rows by topic and add display helpers
-    // ------------------------------------------------------------------
-    let sttCounter = 0;
-    const result = [];
-    let i = 0;
-    while (i < filtered.length) {
-        const currentTopic = filtered[i].topic;
-        let j = i;
-        while (j < filtered.length && filtered[j].topic === currentTopic) {
-            j++;
-        }
-        const groupRows = filtered.slice(i, j);
-        sttCounter++;
+    // Step 3b: Sort the groups (topics) by the smallest group number among its students
+    //          Orphans (topic === null) go to the end.
+    const sortedGroups = Array.from(topicMap.entries()).sort((a, b) => {
+        const rowsA = a[1];
+        const rowsB = b[1];
+        // Compute minimum group number for each topic
+        const minGroupA = Math.min(...rowsA.map(r => parseInt(r.group) || 9999));
+        const minGroupB = Math.min(...rowsB.map(r => parseInt(r.group) || 9999));
+        // Null topic (orphans) should appear at the end
+        if (a[0] === null) return 1;
+        if (b[0] === null) return -1;
+        return minGroupA - minGroupB;
+    });
 
-        groupRows.forEach((row, idx) => {
+    // Step 3c: Inside each group, sort students by group number (ascending)
+    //          Then build final result with rowSpan and isFirst
+    const result = [];
+    let sttCounter = 0;
+
+    for (const [topic, rows] of sortedGroups) {
+        // Sort students inside this topic by group number
+        rows.sort((x, y) => (parseInt(x.group) || 9999) - (parseInt(y.group) || 9999));
+        sttCounter++;
+        rows.forEach((row, idx) => {
             result.push({
                 ...row,
                 isFirst: idx === 0,
                 stt: idx === 0 ? sttCounter : null,
-                rowSpan: idx === 0 ? groupRows.length : null,
+                rowSpan: idx === 0 ? rows.length : null,
             });
         });
-
-        i = j;
     }
 
     return result;
@@ -1777,7 +1786,7 @@ const headerUser = computed(() => ({
   giang_vien: teacherMaGV.value
     ? {
         MaGV: teacherMaGV.value,
-        sinh_viens: rawGuideStudents.value,   // raw list with MSSV, Ho_va_Ten, ...
+        sinh_viens: rawGuideStudents.value,
       }
     : null,
 }))
