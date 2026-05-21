@@ -4629,16 +4629,6 @@
                             </p>
                         </div>
 
-                        <!-- RIGHT -->
-                        <div class="flex items-center gap-3">
-                            <!-- ADD -->
-                            <button
-                                @click="showAddTimeModal = true"
-                                class="h-11 px-5 rounded-2xl bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white text-sm font-semibold shadow transition-all"
-                            >
-                                + Thêm sự kiện
-                            </button>
-                        </div>
                     </div>
 
                     <!-- TABLE -->
@@ -4815,15 +4805,7 @@
                                                     Sửa
                                                 </button>
 
-                                                <!-- DELETE -->
-                                                <button
-                                                    @click="
-                                                        deleteEvent(item.id)
-                                                    "
-                                                    class="px-3 py-2 rounded-xl bg-red-500 hover:bg-red-600 text-white text-[11px] font-semibold shadow transition-all"
-                                                >
-                                                    Xóa
-                                                </button>
+                                               
                                             </div>
                                         </td>
                                     </tr>
@@ -5231,17 +5213,6 @@ const saveEdit = async () => {
         await loadTimeAllocations();
     } catch (error) {
         console.error("Failed to save event:", error);
-    }
-};
-
-const deleteEvent = async (id) => {
-    if (!confirm("Bạn có chắc muốn xóa sự kiện này?")) return;
-
-    try {
-        await axios.delete(`/thoi-gian/${id}`);
-        await loadTimeAllocations();
-    } catch (error) {
-        console.error("Failed to delete event:", error);
     }
 };
 
