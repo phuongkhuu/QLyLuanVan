@@ -8,21 +8,25 @@
             <!-- Sidebar  -->
             <SidebarGV
                 :currentView="currentView"
+                :user = "user"
                 @changeView="currentView = $event"
             />
 
             <!-- Main content -->
-            <main class="flex-1 p-8 overflow-auto">
+            <main class="flex-1 overflow-y-auto p-6">
                 <!-- Dashboard View -->
                 <DashboardView
                     v-if="currentView === 'dashboard'"
                     :user="user"
+                    :students="students1"
                 />
 
                 <!-- Students view -->
                 <StudentsView
                     v-if="currentView === 'students'"
                     :students="students1"
+                    @refreshStudents="fetchStudents"
+                    @groupsUpdated="applyStudentGroupUpdates"
                 />
 
                 <!-- Assign Topic view -->
@@ -69,384 +73,160 @@
                     :lichHenData="lichHenData"
                     :fetchLichHen="fetchLichHen"
                 />
-                <!-- Mini Form ĐIỂM PHẢN BIỆN -->
-                <div
-                    v-if="showReviewScoreMiniForm"
-                    class="fixed inset-0 z-50 bg-black bg-opacity-40 flex items-start justify-center overflow-auto"
-                >
-                    <div
-                        class="bg-white rounded-lg mt-8 mb-8 p-6 w-[92%] max-w-[980px] shadow-lg"
-                    >
-                        <!-- Header -->
-                        <div class="flex justify-between items-start mb-4">
-                            <h3
-                                class="text-xl font-bold text-indigo-600 text-center w-full"
-                            >
-                                Phiếu chấm điểm phản biện
-                            </h3>
-                            <button
-                                @click="closeReviewScoreMiniForm"
-                                class="text-gray-500 absolute right-8 top-6"
-                            >
-                                ✕
-                            </button>
-                        </div>
-
-                        <!-- Group info -->
-                        <div class="text-center mb-6">
-                            <p class="text-sm mb-1">Thành viên trong nhóm:</p>
-                            <div class="font-medium text-sm">
-                                <p
-                                    v-for="mem in reviewScoreMiniForm.students"
-                                    :key="mem.mssv"
-                                >
-                                    {{ mem.name }} - MSSV: {{ mem.mssv }}
-                                </p>
-                            </div>
-
-                            <p class="mt-2">
-                                Đề tài:
-                                <span class="font-semibold">{{
-                                    reviewScoreMiniForm.TenDeTai
-                                }}</span>
-                            </p>
-                        </div>
-
-                        <div class="border rounded-lg p-5 mb-8 bg-indigo-50">
-                            <p
-                                class="text-center font-semibold mb-4 text-indigo-700"
-                            >
-                                Nhận xét chung cho nhóm
-                            </p>
-
-                            <!-- Đạt / Không đạt -->
-                            <div class="flex justify-center gap-8 mb-4">
-                                <label>
-                                    <input
-                                        type="radio"
-                                        value="Đạt"
-                                        v-model="
-                                            reviewScoreMiniForm.shared.overall
-                                        "
-                                    />
-                                    Đạt
-                                </label>
-                                <label>
-                                    <input
-                                        type="radio"
-                                        value="Không đạt"
-                                        v-model="
-                                            reviewScoreMiniForm.shared.overall
-                                        "
-                                    />
-                                    Không đạt
-                                </label>
-                            </div>
-
-                            <!-- Điều chỉnh -->
-                            <div class="mb-4">
-                                <label
-                                    class="block text-center font-medium text-indigo-600 mb-2"
-                                >
-                                    Yêu cầu điều chỉnh, thay đổi, bổ sung
-                                </label>
-                                <textarea
-                                    v-model="
-                                        reviewScoreMiniForm.shared.overallNote
-                                    "
-                                    rows="3"
-                                    class="w-full border rounded p-3 resize-none"
-                                ></textarea>
-                            </div>
-
-                            <!-- Ưu điểm -->
-                            <div class="mb-4">
-                                <label
-                                    class="block text-center font-medium text-indigo-600 mb-2"
-                                >
-                                    Ưu điểm chính
-                                </label>
-                                <textarea
-                                    v-model="
-                                        reviewScoreMiniForm.shared.strengths
-                                    "
-                                    rows="3"
-                                    class="w-full border rounded p-3 resize-none"
-                                ></textarea>
-                            </div>
-
-                            <!-- Nhược điểm -->
-                            <div class="mb-4">
-                                <label
-                                    class="block text-center font-medium text-indigo-600 mb-2"
-                                >
-                                    Thiếu sót chính
-                                </label>
-                                <textarea
-                                    v-model="
-                                        reviewScoreMiniForm.shared.weaknesses
-                                    "
-                                    rows="3"
-                                    class="w-full border rounded p-3 resize-none"
-                                ></textarea>
-                            </div>
-
-                            <!-- Câu hỏi -->
-                            <div>
-                                <label
-                                    class="block text-center font-medium text-indigo-600 mb-2"
-                                >
-                                    Câu hỏi cho sinh viên
-                                </label>
-                                <textarea
-                                    v-model="
-                                        reviewScoreMiniForm.shared.questions
-                                    "
-                                    rows="2"
-                                    class="w-full border rounded p-3 resize-none"
-                                ></textarea>
-                            </div>
-                        </div>
-
-                        <!-- ================= CHẤM RIÊNG TỪNG SINH VIÊN ================= -->
-                        <div
-                            v-for="mem in reviewScoreMiniForm.students"
-                            :key="mem.mssv"
-                            class="border rounded-lg p-4 mb-6"
-                        >
-                            <p class="text-center font-semibold mb-4">
-                                Chấm cho: {{ mem.name }} - MSSV: {{ mem.mssv }}
-                            </p>
-
-                            <!-- Criteria -->
-                            <table class="w-full border mb-4">
-                                <thead>
-                                    <tr class="bg-gray-100">
-                                        <th class="p-2 border">STT</th>
-                                        <th class="p-2 border">Nội dung</th>
-                                        <th class="p-2 border text-center">
-                                            Điểm tối đa
-                                        </th>
-                                        <th class="p-2 border text-center">
-                                            Điểm
-                                        </th>
-                                        <th class="p-2 border text-center">
-                                            Điểm theo phần trăm
-                                        </th>
-                                        <th class="p-2 border">Ghi chú</th>
-                                    </tr>
-                                </thead>
-
-                                <tbody>
-                                    <tr
-                                        v-for="(c, idx) in mem.criteria"
-                                        :key="idx"
-                                    >
-                                        <td class="border p-2 text-center">
-                                            {{ idx + 1 }}
-                                        </td>
-                                        <td class="border p-2">
-                                            {{ c.title }}
-                                        </td>
-                                        <td class="border p-2 text-center">
-                                            {{ c.max }}
-                                        </td>
-                                        <td class="border p-2 text-center">
-                                            <input
-                                                type="number"
-                                                v-model.number="c.score"
-                                                min="0"
-                                                :max="c.max"
-                                                class="w-16 border rounded text-center"
-                                                @input="onScoreInput($event, c)"
-                                            />
-                                        </td>
-                                        <td class="border p-2 text-center">
-                                            {{ c.score * 10 }}%
-                                        </td>
-                                        <td class="border p-2">
-                                            <textarea
-                                                v-model="c.note"
-                                                rows="2"
-                                                class="w-full border rounded resize-none"
-                                            ></textarea>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                                <tr>
-                                    <td
-                                        class="p-3 border font-semibold"
-                                        colspan="2"
-                                    >
-                                        Tổng điểm:
-                                    </td>
-                                    <td
-                                        class="p-3 border text-center font-semibold"
-                                    >
-                                        {{ totalGuideMaxOfStudent(mem) }}
-                                    </td>
-                                    <td
-                                        class="p-3 border text-center font-semibold"
-                                    >
-                                        {{ totalGuideScoreOfStudent(mem) }}
-                                    </td>
-                                    <td class="p-3 border text-center">
-                                        {{ percentGuideScoreOfStudent(mem) }}%
-                                    </td>
-                                </tr>
-                            </table>
-
-                            <!-- Đề nghị -->
-                            <div class="mb-4">
-                                <label
-                                    class="block text-center font-medium text-indigo-600 mb-2"
-                                >
-                                    Đề nghị bảo vệ
-                                </label>
-                                <div class="flex justify-center gap-6">
-                                    <label>
-                                        <input
-                                            type="radio"
-                                            value="Được bảo vệ"
-                                            v-model="mem.recommend"
-                                        />
-                                        Được bảo vệ
-                                    </label>
-                                    <label>
-                                        <input
-                                            type="radio"
-                                            value="Không được bảo vệ"
-                                            v-model="mem.recommend"
-                                        />
-                                        Không được bảo vệ
-                                    </label>
-                                    <label>
-                                        <input
-                                            type="radio"
-                                            value="Bổ sung/hiệu chỉnh để được bảo vệ"
-                                            v-model="mem.recommend"
-                                        />
-                                        Bổ sung/hiệu chỉnh
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Footer -->
-                        <div class="flex justify-end gap-4">
-                            <button
-                                @click="closeReviewScoreMiniForm"
-                                class="px-4 py-2 rounded border"
-                            >
-                                Đóng
-                            </button>
-                            <button
-                                @click="saveReviewScoreMiniForm"
-                                class="px-5 py-2 rounded bg-blue-500 text-white"
-                                :disabled="!canReview"
-                            >
-                                Xác nhận
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Guide Score view -->
-                <div v-if="currentView === 'guideScore'">
-                    <div class="flex justify-between items-center mb-6">
+                <!-- ========================= -->
+                <!-- GUIDE SCORE VIEW -->
+                <!-- ========================= -->
+                <div v-if="currentView === 'guideScore'" class="space-y-4">
+                    <!-- Header -->
+                    <div class="flex items-center justify-between">
                         <h2 class="text-2xl font-bold text-indigo-600">
                             ĐIỂM HƯỚNG DẪN
                         </h2>
-                        <div>
-                            <input
-                                v-model="guideScoreSearch"
-                                type="text"
-                                placeholder="Tìm mã hoặc tên đề tài..."
-                                class="border rounded px-3 py-2 text-sm w-64"
-                            />
-                        </div>
+
+                        <input
+                            v-model="guideScoreSearch"
+                            type="text"
+                            placeholder="Tìm mã hoặc tên đề tài..."
+                            class="w-72 px-3 py-2 text-sm rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-indigo-400 focus:outline-none"
+                        />
                     </div>
 
-                    <div class="bg-white rounded shadow overflow-x-auto">
-                        <table
-                            class="min-w-full text-sm divide-y divide-gray-200"
-                        >
-                            <thead class="bg-indigo-100 text-indigo-700">
-                                <tr>
-                                    <th class="p-3 text-center">STT</th>
-                                    <th class="p-3 text-center">Mã đề tài</th>
-                                    <th class="p-3 text-center">Tên đề tài</th>
-                                    <th class="p-3 text-center">MSSV</th>
-                                    <th class="p-3 text-center">
-                                        Họ và tên sinh viên
-                                    </th>
-                                    <th class="p-3 text-center">Thao tác</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr
-                                    v-for="(row, idx) in guideScoreList"
-                                    :key="
-                                        (row.topic.MaDT ||
-                                            row.topic.id ||
-                                            't') +
-                                        '-' +
-                                        idx
-                                    "
-                                    :class="
-                                        isTopicHovered(row.topic)
-                                            ? 'bg-indigo-50'
-                                            : ''
-                                    "
-                                    @mouseenter="setHoveredTopic(row.topic)"
-                                    @mouseleave="clearHoveredTopic"
-                                >
-                                    <td
-                                        v-if="row.isFirst"
-                                        class="p-3 text-center"
-                                        :rowspan="row.rowSpan"
-                                    >
-                                        {{ row.stt }}
-                                    </td>
+                    <!-- Table -->
+                    <div
+                        class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm"
+                    >
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm">
+                                <!-- Header -->
+                                <thead class="bg-indigo-100 text-indigo-700">
+                                    <tr>
+                                        <th
+                                            class="px-4 py-3 text-center font-semibold"
+                                        >
+                                            STT
+                                        </th>
 
-                                    <td
-                                        v-if="row.isFirst"
-                                        class="p-3 text-center"
-                                        :rowspan="row.rowSpan"
-                                    >
-                                        {{
-                                            row.topic.MaDT ||
-                                            row.topic.id ||
-                                            "-"
-                                        }}
-                                    </td>
+                                        <th
+                                            class="px-4 py-3 text-center font-semibold"
+                                        >
+                                            Mã đề tài
+                                        </th>
 
-                                    <td
-                                        v-if="row.isFirst"
-                                        class="p-3 text-center"
-                                        :rowspan="row.rowSpan"
-                                    >
-                                        {{
-                                            row.topic.TenDeTai ||
-                                            row.topic.TenDT ||
-                                            row.topic.title ||
-                                            "-"
-                                        }}
-                                    </td>
+                                        <th
+                                            class="px-4 py-3 text-left font-semibold"
+                                        >
+                                            Tên đề tài
+                                        </th>
 
-                                    <td class="p-3 text-center">
-                                        {{ row.MSSV || "-" }}
-                                    </td>
-                                    <td class="p-3 text-center">
-                                        {{ row.name || "-" }}
-                                    </td>
+                                        <th
+                                            class="px-4 py-3 text-center font-semibold"
+                                        >
+                                            MSSV
+                                        </th>
 
-                                    <td
-                                        v-if="row.isFirst"
-                                        class="p-3 text-center"
-                                        :rowspan="row.rowSpan"
+                                        <th
+                                            class="px-4 py-3 text-left font-semibold"
+                                        >
+                                            Họ và tên sinh viên
+                                        </th>
+
+                                        <th
+                                            class="px-4 py-3 text-center font-semibold"
+                                        >
+                                            Thao tác
+                                        </th>
+                                    </tr>
+                                </thead>
+
+                                <!-- Body -->
+                                <tbody>
+                                    <tr
+                                        v-for="(row, idx) in guideScoreList"
+                                        :key="
+                                            (row.topic.MaDT ||
+                                                row.topic.id ||
+                                                't') +
+                                            '-' +
+                                            idx
+                                        "
+                                        @mouseenter="setHoveredTopic(row.topic)"
+                                        @mouseleave="clearHoveredTopic"
+                                        :class="[
+                                            isTopicHovered(row.topic)
+                                                ? 'bg-indigo-50'
+                                                : 'bg-white',
+
+                                            row.isFirst
+                                                ? 'border-t-[8px] border-gray-100'
+                                                : '',
+
+                                            'transition-colors duration-150',
+                                        ]"
                                     >
-                                        <div class="flex gap-2 justify-center">
+                                        <!-- STT -->
+                                        <td
+                                            v-if="row.isFirst"
+                                            :rowspan="row.rowSpan"
+                                            class="px-4 py-4 text-center align-middle text-gray-700"
+                                        >
+                                            {{ row.stt }}
+                                        </td>
+
+                                        <!-- Mã đề tài -->
+                                        <td
+                                            v-if="row.isFirst"
+                                            :rowspan="row.rowSpan"
+                                            class="px-4 py-4 text-center align-middle"
+                                        >
+                                            <span
+                                                class="px-3 py-1 rounded-full bg-indigo-500 text-white text-xs font-bold"
+                                            >
+                                                {{
+                                                    row.topic.MaDT ||
+                                                    row.topic.id ||
+                                                    "-"
+                                                }}
+                                            </span>
+                                        </td>
+
+                                        <!-- Tên đề tài -->
+                                        <td
+                                            v-if="row.isFirst"
+                                            :rowspan="row.rowSpan"
+                                            class="px-4 py-4 align-middle"
+                                        >
+                                            <div
+                                                class="max-w-[260px] font-semibold text-gray-800 leading-relaxed"
+                                            >
+                                                {{
+                                                    row.topic.TenDeTai ||
+                                                    row.topic.TenDT ||
+                                                    row.topic.title ||
+                                                    "-"
+                                                }}
+                                            </div>
+                                        </td>
+
+                                        <!-- MSSV -->
+                                        <td
+                                            class="px-4 py-4 text-center text-gray-700 whitespace-nowrap"
+                                        >
+                                            {{ row.MSSV || "-" }}
+                                        </td>
+
+                                        <!-- Name -->
+                                        <td
+                                            class="px-4 py-4 text-gray-800 font-medium whitespace-nowrap"
+                                        >
+                                            {{ row.name || "-" }}
+                                        </td>
+
+                                        <!-- Action -->
+                                        <td
+                                            v-if="row.isFirst"
+                                            :rowspan="row.rowSpan"
+                                            class="px-4 py-4 text-center align-middle"
+                                        >
                                             <button
                                                 @click="
                                                     openGuideScoreMiniForm(
@@ -455,307 +235,443 @@
                                                         row.name,
                                                     )
                                                 "
-                                                class="bg-blue-500 text-white px-3 py-1 rounded text-sm"
+                                                class="bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold px-4 py-2 rounded-lg shadow-sm transition-all"
                                             >
                                                 Chấm điểm
                                             </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr v-if="(guideScoreList || []).length === 0">
-                                    <td
-                                        colspan="4"
-                                        class="p-4 text-center text-gray-500"
+                                        </td>
+                                    </tr>
+
+                                    <!-- Empty -->
+                                    <tr
+                                        v-if="
+                                            (guideScoreList || []).length === 0
+                                        "
                                     >
-                                        Không có đề tài
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+                                        <td
+                                            colspan="6"
+                                            class="py-8 text-center text-gray-400"
+                                        >
+                                            Không có đề tài
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Mini Form ĐIỂM HƯỚNG DẪN -->
+                <!-- ========================= -->
+                <!-- GUIDE SCORE MODAL -->
+                <!-- ========================= -->
                 <div
                     v-if="showGuideScoreMiniForm"
-                    class="fixed inset-0 z-50 bg-black bg-opacity-40 flex items-start justify-center overflow-auto"
+                    class="fixed inset-0 z-50 flex items-start justify-center overflow-auto bg-black/40 backdrop-blur-sm"
                 >
                     <div
-                        class="bg-white rounded-lg mt-8 mb-8 p-6 w-[92%] max-w-[980px] shadow-lg"
+                        class="relative w-[95%] max-w-6xl rounded-2xl bg-white shadow-2xl mt-8 mb-8"
                     >
                         <!-- Header -->
-                        <div class="flex justify-between items-start mb-4">
-                            <h3
-                                class="text-xl font-bold text-indigo-600 text-center w-full"
-                            >
+                        <div
+                            class="sticky top-0 z-10 flex items-center justify-between border-b border-gray-200 bg-white px-6 py-4 rounded-t-2xl"
+                        >
+                            <h3 class="text-2xl font-bold text-indigo-600">
                                 Phiếu chấm điểm hướng dẫn
                             </h3>
+
                             <button
                                 @click="closeGuideScoreMiniForm"
-                                class="text-gray-500 absolute right-8 top-6"
+                                class="flex items-center justify-center w-9 h-9 rounded-full hover:bg-gray-100 text-gray-500 transition-all"
                             >
                                 ✕
                             </button>
                         </div>
 
-                        <!-- Group info -->
-                        <div class="text-center mb-6">
-                            <p class="text-sm mb-1">Thành viên trong nhóm:</p>
-                            <div class="font-medium text-sm">
-                                <p
-                                    v-for="mem in guideScoreMiniForm.students"
-                                    :key="mem.mssv"
-                                >
-                                    {{ mem.name }} - MSSV: {{ mem.mssv }}
-                                </p>
-                            </div>
-                            <p class="mt-2">
-                                Đề tài:
-                                <span class="font-semibold">{{
-                                    guideScoreMiniForm.TenDeTai
-                                }}</span>
-                            </p>
-                        </div>
-
-                        <!-- ================= NHẬN XÉT CHUNG (1 LẦN) ================= -->
-                        <div class="border rounded-lg p-5 mb-8 bg-indigo-50">
-                            <p
-                                class="text-center font-semibold mb-4 text-indigo-700"
+                        <!-- Body -->
+                        <div class="p-6">
+                            <!-- Group Info -->
+                            <div
+                                class="rounded-2xl border border-indigo-100 bg-indigo-50 p-5 mb-6"
                             >
-                                Nhận xét chung cho nhóm
-                            </p>
+                                <p class="text-sm text-gray-500 mb-2">
+                                    Thành viên nhóm
+                                </p>
 
-                            <!-- Đạt / Không đạt -->
-                            <div class="flex justify-center gap-8 mb-4">
-                                <label>
-                                    <input
-                                        type="radio"
-                                        value="Đạt"
-                                        v-model="
-                                            guideScoreMiniForm.shared.overall
-                                        "
-                                    />
-                                    Đạt
-                                </label>
-                                <label>
-                                    <input
-                                        type="radio"
-                                        value="Không đạt"
-                                        v-model="
-                                            guideScoreMiniForm.shared.overall
-                                        "
-                                    />
-                                    Không đạt
-                                </label>
-                            </div>
-
-                            <!-- Điều chỉnh -->
-                            <div class="mb-4">
-                                <label
-                                    class="block text-center font-medium text-indigo-600 mb-2"
-                                >
-                                    Yêu cầu điều chỉnh, thay đổi, bổ sung
-                                </label>
-                                <textarea
-                                    v-model="
-                                        guideScoreMiniForm.shared.overallNote
-                                    "
-                                    rows="3"
-                                    class="w-full border rounded p-3 resize-none"
-                                ></textarea>
-                            </div>
-
-                            <!-- Ưu điểm -->
-                            <div class="mb-4">
-                                <label
-                                    class="block text-center font-medium text-indigo-600 mb-2"
-                                >
-                                    Ưu điểm chính
-                                </label>
-                                <textarea
-                                    v-model="
-                                        guideScoreMiniForm.shared.strengths
-                                    "
-                                    rows="3"
-                                    class="w-full border rounded p-3 resize-none"
-                                ></textarea>
-                            </div>
-
-                            <!-- Nhược điểm -->
-                            <div class="mb-4">
-                                <label
-                                    class="block text-center font-medium text-indigo-600 mb-2"
-                                >
-                                    Thiếu sót chính
-                                </label>
-                                <textarea
-                                    v-model="
-                                        guideScoreMiniForm.shared.weaknesses
-                                    "
-                                    rows="3"
-                                    class="w-full border rounded p-3 resize-none"
-                                ></textarea>
-                            </div>
-
-                            <!-- Câu hỏi -->
-                            <div>
-                                <label
-                                    class="block text-center font-medium text-indigo-600 mb-2"
-                                >
-                                    Câu hỏi cho sinh viên
-                                </label>
-                                <textarea
-                                    v-model="
-                                        guideScoreMiniForm.shared.questions
-                                    "
-                                    rows="2"
-                                    class="w-full border rounded p-3 resize-none"
-                                ></textarea>
-                            </div>
-                        </div>
-
-                        <!-- ================= CHẤM RIÊNG TỪNG SINH VIÊN ================= -->
-                        <div
-                            v-for="mem in guideScoreMiniForm.students"
-                            :key="mem.mssv"
-                            class="border rounded-lg p-4 mb-6"
-                        >
-                            <p class="text-center font-semibold mb-4">
-                                Chấm cho: {{ mem.name }} - MSSV: {{ mem.mssv }}
-                            </p>
-
-                            <!-- Criteria -->
-                            <table class="w-full border mb-4">
-                                <thead>
-                                    <tr class="bg-gray-100">
-                                        <th class="p-2 border">STT</th>
-                                        <th class="p-2 border">Nội dung</th>
-                                        <th class="p-2 border text-center">
-                                            Điểm tối đa
-                                        </th>
-                                        <th class="p-2 border text-center">
-                                            Điểm
-                                        </th>
-                                        <th class="p-2 border text-center">
-                                            Điểm theo phần trăm
-                                        </th>
-                                        <th class="p-2 border">Ghi chú</th>
-                                    </tr>
-                                </thead>
-
-                                <tbody>
-                                    <tr
-                                        v-for="(c, idx) in mem.criteria"
-                                        :key="idx"
+                                <div class="flex flex-wrap gap-2 mb-4">
+                                    <span
+                                        v-for="mem in guideScoreMiniForm.students"
+                                        :key="mem.mssv"
+                                        class="px-3 py-1 rounded-full bg-white border border-indigo-200 text-sm font-medium text-indigo-700"
                                     >
-                                        <td class="border p-2 text-center">
-                                            {{ idx + 1 }}
-                                        </td>
-                                        <td class="border p-2">
-                                            {{ c.title }}
-                                        </td>
-                                        <td class="border p-2 text-center">
-                                            {{ c.max }}
-                                        </td>
-                                        <td class="border p-2 text-center">
-                                            <input
-                                                type="number"
-                                                v-model.number="c.score"
-                                                min="0"
-                                                :max="c.max"
-                                                class="w-16 border rounded text-center"
-                                                @input="onScoreInput($event, c)"
-                                            />
-                                        </td>
-                                        <td class="border p-2 text-center">
-                                            {{ c.score * 10 }}%
-                                        </td>
-                                        <td class="border p-2">
-                                            <textarea
-                                                v-model="c.note"
-                                                rows="2"
-                                                class="w-full border rounded resize-none"
-                                            ></textarea>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td
-                                            class="p-3 border font-semibold"
-                                            colspan="2"
-                                        >
-                                            Tổng điểm:
-                                        </td>
-                                        <td
-                                            class="p-3 border text-center font-semibold"
-                                        >
-                                            {{ totalGuideMaxOfStudent(mem) }}
-                                        </td>
-                                        <td
-                                            class="p-3 border text-center font-semibold"
-                                        >
-                                            {{ totalGuideScoreOfStudent(mem) }}
-                                        </td>
-                                        <td class="p-3 border text-center">
-                                            {{
-                                                percentGuideScoreOfStudent(mem)
-                                            }}%
-                                        </td>
-                                        <td class="border"></td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                                        {{ mem.name }} - {{ mem.mssv }}
+                                    </span>
+                                </div>
 
-                            <!-- Đề nghị -->
-                            <div class="mb-4">
-                                <label
-                                    class="block text-center font-medium text-indigo-600 mb-2"
-                                >
-                                    Đề nghị bảo vệ
-                                </label>
-                                <div class="flex justify-center gap-6">
-                                    <label>
-                                        <input
-                                            type="radio"
-                                            value="Được bảo vệ"
-                                            v-model="mem.recommend"
-                                        />
-                                        Được bảo vệ
-                                    </label>
-                                    <label>
-                                        <input
-                                            type="radio"
-                                            value="Không được bảo vệ"
-                                            v-model="mem.recommend"
-                                        />
-                                        Không được bảo vệ
-                                    </label>
-                                    <label>
-                                        <input
-                                            type="radio"
-                                            value="Bổ sung/hiệu chỉnh để được bảo vệ"
-                                            v-model="mem.recommend"
-                                        />
-                                        Bổ sung/hiệu chỉnh
-                                    </label>
+                                <div>
+                                    <span class="text-sm text-gray-500">
+                                        Đề tài:
+                                    </span>
+
+                                    <span
+                                        class="font-semibold text-gray-800 ml-1"
+                                    >
+                                        {{ guideScoreMiniForm.TenDeTai }}
+                                    </span>
                                 </div>
                             </div>
-                        </div>
 
-                        <!-- Footer -->
-                        <div class="flex justify-end gap-4">
-                            <button
-                                @click="closeGuideScoreMiniForm"
-                                class="px-4 py-2 rounded border"
+                            <!-- Shared Comment -->
+                            <div
+                                class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm mb-8"
                             >
-                                Đóng
-                            </button>
-                            <button
-                                @click="saveGuideScoreMiniForm"
-                                class="px-5 py-2 rounded bg-blue-500 text-white"
-                                :disabled="!canGuide"
+                                <h4
+                                    class="text-lg font-bold text-indigo-600 mb-6"
+                                >
+                                    Nhận xét chung cho nhóm
+                                </h4>
+
+                                <!-- Radio -->
+                                <div class="flex justify-center gap-10 mb-6">
+                                    <label
+                                        class="flex items-center gap-2 text-sm font-medium"
+                                    >
+                                        <input
+                                            type="radio"
+                                            value="Đạt"
+                                            v-model="
+                                                guideScoreMiniForm.shared
+                                                    .overall
+                                            "
+                                        />
+
+                                        Đạt
+                                    </label>
+
+                                    <label
+                                        class="flex items-center gap-2 text-sm font-medium"
+                                    >
+                                        <input
+                                            type="radio"
+                                            value="Không đạt"
+                                            v-model="
+                                                guideScoreMiniForm.shared
+                                                    .overall
+                                            "
+                                        />
+
+                                        Không đạt
+                                    </label>
+                                </div>
+
+                                <!-- Textareas -->
+                                <div
+                                    class="grid grid-cols-1 md:grid-cols-2 gap-5"
+                                >
+                                    <div class="space-y-2">
+                                        <label
+                                            class="text-sm font-semibold text-gray-700"
+                                        >
+                                            Yêu cầu điều chỉnh
+                                        </label>
+
+                                        <textarea
+                                            v-model="
+                                                guideScoreMiniForm.shared
+                                                    .overallNote
+                                            "
+                                            rows="4"
+                                            class="w-full rounded-xl border border-gray-300 px-4 py-3 resize-none focus:ring-2 focus:ring-indigo-400 focus:outline-none"
+                                        ></textarea>
+                                    </div>
+
+                                    <div class="space-y-2">
+                                        <label
+                                            class="text-sm font-semibold text-gray-700"
+                                        >
+                                            Ưu điểm chính
+                                        </label>
+
+                                        <textarea
+                                            v-model="
+                                                guideScoreMiniForm.shared
+                                                    .strengths
+                                            "
+                                            rows="4"
+                                            class="w-full rounded-xl border border-gray-300 px-4 py-3 resize-none focus:ring-2 focus:ring-indigo-400 focus:outline-none"
+                                        ></textarea>
+                                    </div>
+
+                                    <div class="space-y-2">
+                                        <label
+                                            class="text-sm font-semibold text-gray-700"
+                                        >
+                                            Thiếu sót chính
+                                        </label>
+
+                                        <textarea
+                                            v-model="
+                                                guideScoreMiniForm.shared
+                                                    .weaknesses
+                                            "
+                                            rows="4"
+                                            class="w-full rounded-xl border border-gray-300 px-4 py-3 resize-none focus:ring-2 focus:ring-indigo-400 focus:outline-none"
+                                        ></textarea>
+                                    </div>
+
+                                    <div class="space-y-2">
+                                        <label
+                                            class="text-sm font-semibold text-gray-700"
+                                        >
+                                            Câu hỏi cho sinh viên
+                                        </label>
+
+                                        <textarea
+                                            v-model="
+                                                guideScoreMiniForm.shared
+                                                    .questions
+                                            "
+                                            rows="4"
+                                            class="w-full rounded-xl border border-gray-300 px-4 py-3 resize-none focus:ring-2 focus:ring-indigo-400 focus:outline-none"
+                                        ></textarea>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Student Score -->
+                            <div
+                                v-for="mem in guideScoreMiniForm.students"
+                                :key="mem.mssv"
+                                class="rounded-2xl border border-gray-200 bg-white shadow-sm p-5 mb-8"
                             >
-                                Xác nhận
-                            </button>
+                                <!-- Student Header -->
+                                <div
+                                    class="flex items-center justify-between mb-5"
+                                >
+                                    <div>
+                                        <h4
+                                            class="text-lg font-bold text-gray-800"
+                                        >
+                                            {{ mem.name }}
+                                        </h4>
+
+                                        <p class="text-sm text-gray-500">
+                                            MSSV: {{ mem.mssv }}
+                                        </p>
+                                    </div>
+
+                                    <span
+                                        class="px-4 py-2 rounded-full bg-indigo-100 text-indigo-700 text-sm font-semibold"
+                                    >
+                                        {{ percentGuideScoreOfStudent(mem) }}%
+                                    </span>
+                                </div>
+
+                                <!-- Table -->
+                                <div
+                                    class="overflow-hidden rounded-xl border border-gray-200"
+                                >
+                                    <table class="w-full text-sm">
+                                        <thead
+                                            class="bg-indigo-100 text-indigo-700"
+                                        >
+                                            <tr>
+                                                <th
+                                                    class="px-3 py-3 text-center"
+                                                >
+                                                    STT
+                                                </th>
+
+                                                <th class="px-3 py-3 text-left">
+                                                    Nội dung
+                                                </th>
+
+                                                <th
+                                                    class="px-3 py-3 text-center"
+                                                >
+                                                    Max
+                                                </th>
+
+                                                <th
+                                                    class="px-3 py-3 text-center"
+                                                >
+                                                    Điểm
+                                                </th>
+
+                                                <th
+                                                    class="px-3 py-3 text-center"
+                                                >
+                                                    %
+                                                </th>
+
+                                                <th class="px-3 py-3 text-left">
+                                                    Ghi chú
+                                                </th>
+                                            </tr>
+                                        </thead>
+
+                                        <tbody>
+                                            <tr
+                                                v-for="(c, idx) in mem.criteria"
+                                                :key="idx"
+                                                class="border-t border-gray-100"
+                                            >
+                                                <td
+                                                    class="px-3 py-3 text-center"
+                                                >
+                                                    {{ idx + 1 }}
+                                                </td>
+
+                                                <td class="px-3 py-3">
+                                                    {{ c.title }}
+                                                </td>
+
+                                                <td
+                                                    class="px-3 py-3 text-center"
+                                                >
+                                                    {{ c.max }}
+                                                </td>
+
+                                                <td
+                                                    class="px-3 py-3 text-center"
+                                                >
+                                                    <input
+                                                        type="number"
+                                                        v-model.number="c.score"
+                                                        min="0"
+                                                        :max="c.max"
+                                                        @input="
+                                                            onScoreInput(
+                                                                $event,
+                                                                c,
+                                                            )
+                                                        "
+                                                        class="w-20 h-9 rounded-md border border-gray-300 text-center focus:ring-2 focus:ring-indigo-400 focus:outline-none"
+                                                    />
+                                                </td>
+
+                                                <td
+                                                    class="px-3 py-3 text-center font-medium text-indigo-600"
+                                                >
+                                                    {{ c.score * 10 }}%
+                                                </td>
+
+                                                <td class="px-3 py-3">
+                                                    <textarea
+                                                        v-model="c.note"
+                                                        rows="2"
+                                                        class="w-full rounded-lg border border-gray-300 px-3 py-2 resize-none focus:ring-2 focus:ring-indigo-400 focus:outline-none"
+                                                    ></textarea>
+                                                </td>
+                                            </tr>
+
+                                            <!-- Total -->
+                                            <tr
+                                                class="bg-indigo-50 border-t border-indigo-100"
+                                            >
+                                                <td
+                                                    colspan="2"
+                                                    class="px-4 py-4 font-bold text-indigo-700"
+                                                >
+                                                    Tổng điểm
+                                                </td>
+
+                                                <td
+                                                    class="px-4 py-4 text-center font-bold"
+                                                >
+                                                    {{
+                                                        totalGuideMaxOfStudent(
+                                                            mem,
+                                                        )
+                                                    }}
+                                                </td>
+
+                                                <td
+                                                    class="px-4 py-4 text-center font-bold"
+                                                >
+                                                    {{
+                                                        totalGuideScoreOfStudent(
+                                                            mem,
+                                                        )
+                                                    }}
+                                                </td>
+
+                                                <td
+                                                    class="px-4 py-4 text-center font-bold text-indigo-700"
+                                                >
+                                                    {{
+                                                        percentGuideScoreOfStudent(
+                                                            mem,
+                                                        )
+                                                    }}%
+                                                </td>
+
+                                                <td></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <!-- Recommend -->
+                                <div class="mt-5">
+                                    <label
+                                        class="block text-sm font-semibold text-gray-700 mb-3"
+                                    >
+                                        Đề nghị bảo vệ
+                                    </label>
+
+                                    <div class="flex flex-wrap gap-5">
+                                        <label class="flex items-center gap-2">
+                                            <input
+                                                type="radio"
+                                                value="Được bảo vệ"
+                                                v-model="mem.recommend"
+                                            />
+
+                                            Được bảo vệ
+                                        </label>
+
+                                        <label class="flex items-center gap-2">
+                                            <input
+                                                type="radio"
+                                                value="Không được bảo vệ"
+                                                v-model="mem.recommend"
+                                            />
+
+                                            Không được bảo vệ
+                                        </label>
+
+                                        <label class="flex items-center gap-2">
+                                            <input
+                                                type="radio"
+                                                value="Bổ sung/hiệu chỉnh để được bảo vệ"
+                                                v-model="mem.recommend"
+                                            />
+
+                                            Bổ sung/hiệu chỉnh
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Footer -->
+                            <div
+                                class="sticky bottom-0 bg-white border-t border-gray-200 pt-5 flex justify-end gap-3"
+                            >
+                                <button
+                                    @click="closeGuideScoreMiniForm"
+                                    class="px-5 py-2.5 rounded-xl border border-gray-300 hover:bg-gray-100 transition-all"
+                                >
+                                    Đóng
+                                </button>
+
+                                <button
+                                    @click="saveGuideScoreMiniForm"
+                                    :disabled="!canGuide"
+                                    class="px-6 py-2.5 rounded-xl bg-blue-500 hover:bg-blue-600 disabled:opacity-50 text-white font-semibold shadow-sm transition-all"
+                                >
+                                    Xác nhận
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -833,6 +749,53 @@ const normalizeStudent = (s, role) => {
     };
 };
 
+function getStudentMssv(s) {
+    return s?.mssv ?? s?.MSSV ?? null;
+}
+
+function applyGroupToList(listRef, updateMap) {
+    if (!Array.isArray(listRef.value)) return;
+
+    listRef.value.forEach((student) => {
+        const mssv = getStudentMssv(student);
+        if (!mssv || !updateMap.has(mssv)) return;
+
+        const newGroup = updateMap.get(mssv);
+        student.group = newGroup;
+        if (Object.prototype.hasOwnProperty.call(student, "Nhom")) {
+            student.Nhom = newGroup;
+        }
+    });
+}
+
+function sortByGroupAsc(listRef) {
+    if (!Array.isArray(listRef.value)) return;
+    listRef.value = [...listRef.value].sort(
+        (a, b) => Number(a.group ?? 0) - Number(b.group ?? 0),
+    );
+}
+
+function applyStudentGroupUpdates(updates = []) {
+    const validUpdates = (updates || []).filter(
+        (u) => u && u.mssv != null && u.group != null,
+    );
+
+    if (validUpdates.length === 0) return;
+
+    const updateMap = new Map(
+        validUpdates.map((u) => [String(u.mssv), u.group]),
+    );
+
+    applyGroupToList(students1, updateMap);
+    applyGroupToList(students, updateMap);
+    applyGroupToList(studentsReviewer, updateMap);
+    applyGroupToList(rawGuideStudents, updateMap);
+
+    sortByGroupAsc(students1);
+    sortByGroupAsc(students);
+    sortByGroupAsc(studentsReviewer);
+}
+
 const fetchStudents = async () => {
     try {
         const teacherRes = await axios.post(
@@ -849,8 +812,6 @@ const fetchStudents = async () => {
         ]);
 
         rawGuideStudents.value = resTeacher.data || [];
-        console.log(rawGuideStudents.value[0])
-
         const guideStudents = (resTeacher.data || []).map((s) =>
             normalizeStudent(s, "guide"),
         );
@@ -958,7 +919,7 @@ const reviewScoreList = computed(() => {
 });
 
 const guidingScoreList = computed(() => {
-    const q = (guideScoreSearch.value || '').toString().toLowerCase().trim();
+    const q = (guideScoreSearch.value || "").toString().toLowerCase().trim();
 
     // -------------------------------------------------------------------
     // 1. Build flat list of ALL rows (topic + students + orphans)
@@ -966,21 +927,21 @@ const guidingScoreList = computed(() => {
     const allRows = [];
 
     // 1a. From each topic, add its students (or one empty row if no students)
-    (topics.value || []).forEach(topic => {
-        const students = getStudentsOfTopic(topic);   // still works on the real topic
+    (topics.value || []).forEach((topic) => {
+        const students = getStudentsOfTopic(topic); // still works on the real topic
         const sorted = [...students].sort(
-            (a, b) => (Number(a.group) || 999) - (Number(b.group) || 999)
+            (a, b) => (Number(a.group) || 999) - (Number(b.group) || 999),
         );
 
         if (sorted.length === 0) {
             allRows.push({
                 topic,
-                MSSV: '',
-                name: '',
-                group: '',
+                MSSV: "",
+                name: "",
+                group: "",
             });
         } else {
-            sorted.forEach(s => {
+            sorted.forEach((s) => {
                 allRows.push({
                     topic,
                     MSSV: s.mssv,
@@ -992,9 +953,13 @@ const guidingScoreList = computed(() => {
     });
 
     // 1b. Add students that are **not assigned** to any topic
-    const assignedMSSVs = new Set(allRows.filter(r => r.MSSV).map(r => r.MSSV));
-    const orphans = (students1.value || []).filter(s => !assignedMSSVs.has(s.mssv));
-    orphans.forEach(s => {
+    const assignedMSSVs = new Set(
+        allRows.filter((r) => r.MSSV).map((r) => r.MSSV),
+    );
+    const orphans = (students1.value || []).filter(
+        (s) => !assignedMSSVs.has(s.mssv),
+    );
+    orphans.forEach((s) => {
         allRows.push({
             topic: null,
             MSSV: s.mssv,
@@ -1008,18 +973,18 @@ const guidingScoreList = computed(() => {
     // -------------------------------------------------------------------
     let filtered = allRows;
     if (q) {
-        filtered = allRows.filter(row => {
+        filtered = allRows.filter((row) => {
             const t = row.topic || {};
             const text = [
                 row.MSSV,
                 row.name,
                 row.group,
-                t.MaDT || t.code || '',
-                t.TenDeTai || t.TenDT || t.title || '',
-                t.MoTa || t.description || '',
-                t.TrangThai || t.status || '',
+                t.MaDT || t.code || "",
+                t.TenDeTai || t.TenDT || t.title || "",
+                t.MoTa || t.description || "",
+                t.TrangThai || t.status || "",
             ]
-                .join(' ')
+                .join(" ")
                 .toLowerCase();
             return text.includes(q);
         });
@@ -1568,11 +1533,11 @@ async function downloadTemplate(MaDT) {
 async function saveForm(updatedForm) {
     try {
         const payload = {
-            MSSV: formData.MSSV,               
-            TenDT: updatedForm.TenDT,         
+            MSSV: formData.MSSV,
+            TenDT: updatedForm.TenDT,
             MoTa: updatedForm.MoTa,
             TrangThai: updatedForm.TrangThai,
-            MaGV: formData.MaGV,              
+            MaGV: formData.MaGV,
         };
         await axios.post("/save-topic", payload);
         alert("Lưu thành công!");
@@ -1581,7 +1546,7 @@ async function saveForm(updatedForm) {
         fetchTopics();
     } catch (err) {
         const msg = err.response?.data?.errors
-            ? Object.values(err.response.data.errors).flat().join('\n')
+            ? Object.values(err.response.data.errors).flat().join("\n")
             : err.response?.data?.message || "Lỗi khi lưu";
         alert(msg);
     }
@@ -1592,33 +1557,47 @@ function closeForm() {
 
 const assignSearch = ref("");
 const filteredGuideScoreList = computed(() => {
-    const q = (assignSearch.value || '').toLowerCase().trim();
+    const q = (assignSearch.value || "").toLowerCase().trim();
 
     // ------------------------------------------------------------------
     // 1. Build ALL possible rows (same as your original logic)
     // ------------------------------------------------------------------
     const allRows = [];
 
-    (topics.value || []).forEach(topic => {
+    (topics.value || []).forEach((topic) => {
         const students = getStudentsOfTopic(topic);
         const sorted = [...students].sort(
-            (a, b) => (Number(a.group) || 999) - (Number(b.group) || 999)
+            (a, b) => (Number(a.group) || 999) - (Number(b.group) || 999),
         );
 
         if (sorted.length === 0) {
-            allRows.push({ topic, MSSV: '', name: '', group: '' });
+            allRows.push({ topic, MSSV: "", name: "", group: "" });
         } else {
-            sorted.forEach(s => {
-                allRows.push({ topic, MSSV: s.mssv, name: s.name, group: s.group });
+            sorted.forEach((s) => {
+                allRows.push({
+                    topic,
+                    MSSV: s.mssv,
+                    name: s.name,
+                    group: s.group,
+                });
             });
         }
     });
 
     // Add orphans (students without a topic)
-    const assignedMSSVs = new Set(allRows.filter(r => r.MSSV).map(r => r.MSSV));
-    const orphans = (students1.value || []).filter(s => !assignedMSSVs.has(s.mssv));
-    orphans.forEach(s => {
-        allRows.push({ topic: null, MSSV: s.mssv, name: s.name, group: s.group });
+    const assignedMSSVs = new Set(
+        allRows.filter((r) => r.MSSV).map((r) => r.MSSV),
+    );
+    const orphans = (students1.value || []).filter(
+        (s) => !assignedMSSVs.has(s.mssv),
+    );
+    orphans.forEach((s) => {
+        allRows.push({
+            topic: null,
+            MSSV: s.mssv,
+            name: s.name,
+            group: s.group,
+        });
     });
 
     // ------------------------------------------------------------------
@@ -1626,18 +1605,18 @@ const filteredGuideScoreList = computed(() => {
     // ------------------------------------------------------------------
     let filtered = allRows;
     if (q) {
-        filtered = allRows.filter(row => {
+        filtered = allRows.filter((row) => {
             const t = row.topic || {};
             const text = [
                 row.MSSV,
                 row.name,
                 row.group,
-                t.MaDT || t.code || '',
-                t.TenDeTai || t.TenDT || t.title || '',
-                t.MoTa || t.description || '',
-                t.TrangThai || t.status || '',
+                t.MaDT || t.code || "",
+                t.TenDeTai || t.TenDT || t.title || "",
+                t.MoTa || t.description || "",
+                t.TrangThai || t.status || "",
             ]
-                .join(' ')
+                .join(" ")
                 .toLowerCase();
             return text.includes(q);
         });
@@ -1692,7 +1671,7 @@ const filteredGuideScoreList = computed(() => {
     return result;
 });
 const canGrade50 = ref(false);
-2
+2;
 async function fetchGrade50Access() {
     try {
         const res = await axios.get(
@@ -1782,12 +1761,12 @@ function updateNote(student) {
 }
 
 const headerUser = computed(() => ({
-  ...props.user,
-  giang_vien: teacherMaGV.value
-    ? {
-        MaGV: teacherMaGV.value,
-        sinh_viens: rawGuideStudents.value,
-      }
-    : null,
-}))
+    ...props.user,
+    giang_vien: teacherMaGV.value
+        ? {
+              MaGV: teacherMaGV.value,
+              sinh_viens: rawGuideStudents.value, // raw list with MSSV, Ho_va_Ten, ...
+          }
+        : null,
+}));
 </script>

@@ -21,6 +21,88 @@
         <div
             class="flex items-center gap-4"
         >
+        <div class="relative">
+                    <button
+                        @click="toggleNotifications"
+                        class="relative p-2 text-white hover:bg-indigo-500 rounded-full transition"
+                    >
+                        <svg
+                            class="w-6 h-6"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+                            ></path>
+                        </svg>
+                        <span
+                            v-if="$page.props.auth.notifications.length > 0"
+                            class="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-red-100 bg-red-600 rounded-full transform translate-x-1/4 -translate-y-1/4"
+                        >
+                            {{ $page.props.auth.notifications.length }}
+                        </span>
+                    </button>
+
+                    <div
+                        v-if="showNotifications"
+                        class="absolute right-0 mt-2 w-80 bg-white rounded-md shadow-xl z-50 overflow-hidden border border-gray-100"
+                    >
+                        <div
+                            class="bg-gray-50 px-4 py-3 border-b text-gray-700 font-semibold flex justify-between items-center"
+                        >
+                            <span>Thông báo</span>
+                            <span
+                                class="text-xs bg-indigo-100 text-indigo-800 px-2 py-1 rounded-full"
+                                >{{
+                                    $page.props.auth.notifications.length
+                                }}
+                                mới</span
+                            >
+                        </div>
+                        <div class="max-h-64 overflow-y-auto">
+                            <div
+                                v-if="
+                                    $page.props.auth.notifications.length === 0
+                                "
+                                class="p-4 text-center text-sm text-gray-500"
+                            >
+                                Không có thông báo mới.
+                            </div>
+                            <div
+                                v-for="notification in $page.props.auth
+                                    .notifications"
+                                :key="notification.id"
+                                class="p-4 border-b hover:bg-gray-50 cursor-pointer flex flex-col gap-1"
+                                @click="markAsRead(notification.id)"
+                            >
+                                <div class="flex justify-between items-start">
+                                    <span
+                                        class="font-semibold text-sm text-gray-800"
+                                        >{{ notification.data.title }}</span
+                                    >
+                                    <span class="text-[10px] text-gray-400">{{
+                                        new Date(
+                                            notification.created_at,
+                                        ).toLocaleDateString("vi-VN")
+                                    }}</span>
+                                </div>
+                                <p class="text-xs text-gray-600 leading-snug">
+                                    {{ notification.data.message }}
+                                </p>
+                                <div class="text-right mt-1">
+                                    <span
+                                        class="text-[10px] text-indigo-500 hover:text-indigo-700"
+                                        >Đánh dấu đã đọc</span
+                                    >
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             <!-- CHAT -->
             <div class="relative">
                 <!-- Chat Button -->
@@ -497,5 +579,21 @@ function goProfile() {
 
 function logout() {
     router.post("/logout")
+}
+function toggleNotifications() {
+    showNotifications.value = !showNotifications.value;
+    if (showNotifications.value) showMenu.value = false; // Đóng menu profile nếu đang mở
+}
+const showNotifications = ref(false);
+
+function markAsRead(id) {
+    router.post(
+        `/notifications/${id}/mark-as-read`,
+        {},
+        {
+            preserveScroll: true,
+            onSuccess: () => {},
+        },
+    );
 }
 </script>

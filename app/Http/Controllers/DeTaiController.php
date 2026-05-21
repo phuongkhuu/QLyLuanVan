@@ -106,7 +106,7 @@ public function saveTopic(Request $request)
 
     if ($hasOldTopic) {
         $oldTopic = DeTai::find($student->MaDT);
-
+        $oldTopic->TenDeTai = $request->TenDT;
         $oldTopic->TrangThai = $request->TrangThai;
         if ($request->MoTa) {
             $oldTopic->MoTa = $request->MoTa;

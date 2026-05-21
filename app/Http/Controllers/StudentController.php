@@ -10,6 +10,7 @@ use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\Evaluation50Export;
 use App\Exports\ReviewAssignmentExport;
 use App\Exports\CommitteeAssignmentExport;
+use Illuminate\Support\Facades\DB;
 
 class StudentController extends Controller
 {
@@ -173,9 +174,9 @@ class StudentController extends Controller
             return response()->json(['success' => true]);
         }
 
-        if ($sameGroup->count() >= 2) {
+        if ($sameGroup->count() >= 5) {
             return response()->json([
-                'error' => 'Nhóm này đã đủ 2 thành viên!'
+                'error' => 'Nhóm này đã đủ 5 thành viên!'
             ], 400);
         }
 
@@ -184,6 +185,68 @@ class StudentController extends Controller
 
         return response()->json(['success' => true]);
     }
+
+    public function updateStudentGroups(Request $request)
+{
+    $request->validate([
+        'updates' => 'required|array',
+        'updates.*.mssv' => 'required|string|exists:SinhVien,MSSV',
+        'updates.*.group_number' => 'required|integer|min:1',
+    ]);
+
+    DB::beginTransaction();
+    try {
+        foreach ($request->updates as $item) {
+            $student = SinhVien::where('MSSV', $item['mssv'])->first();
+            $generatedGroup = $student->Giang_vien_huong_dan . '-' . $item['group_number'];
+
+            // Reuse the same 5‑member limit logic from updateStudentGroup
+            $sameGroup = SinhVien::where('Nhom', $generatedGroup)->get();
+            if ($sameGroup->count() >= 5 && !$sameGroup->contains('MSSV', $student->MSSV)) {
+                throw new \Exception("Nhóm {$item['group_number']} đã đủ 5 thành viên.");
+            }
+
+            $student->Nhom = $generatedGroup;
+            $student->save();
+        }
+        DB::commit();
+        return response()->json(['success' => true]);
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return response()->json(['error' => $e->getMessage()], 400);
+    }
+}
+
+    public function updateAllEvaluations(Request $request)
+{
+    $request->validate([
+        'updates' => 'required|array',
+        'updates.*.mssv' => 'required|string|exists:SinhVien,MSSV',
+        'updates.*.score' => 'nullable|numeric|min:0|max:100',
+        'updates.*.note' => 'nullable|string|max:255',
+    ]);
+
+    DB::beginTransaction();
+    try {
+        foreach ($request->updates as $item) {
+            $student = SinhVien::where('MSSV', $item['mssv'])->first();
+            
+            // Only update fields that are present in the request
+            if (array_key_exists('score', $item) && $item['score'] !== null) {
+                $student->Diem = $item['score'];
+            }
+            if (array_key_exists('note', $item) && $item['note'] !== null) {
+                $student->GhiChu = $item['note'];
+            }
+            $student->save();
+        }
+        DB::commit();
+        return response()->json(['success' => true]);
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return response()->json(['error' => 'Cập nhật thất bại: ' . $e->getMessage()], 500);
+    }
+}
 
     public function updateStudentTopic(Request $request)
     {
@@ -271,4 +334,6 @@ class StudentController extends Controller
             'sdt'    => $student->sdt,
         ];
     }
+
+
 }
